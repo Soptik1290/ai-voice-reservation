@@ -4,20 +4,23 @@ An AI-powered voice-to-reservation tool that compares real-time AI voice models 
 
 ## 🚀 Features
 
-- **Voice Recording:** Real-time audio recording with waveform visualization
-- **File Upload:** Support for MP3, WAV, WebM, and OGG audio files for testing
-- **Dual AI Comparison:** Switch between OpenAI and Google Gemini to compare results
-- **Czech Language Optimization:** Specifically tuned prompts for Czech language recognition
-- **Automatic Data Extraction:** AI parses spoken commands into structured reservation data
-- **Local Storage:** Save and manage reservations in browser localStorage
+- **Voice Recording:** Real-time audio recording with waveform visualization.
+- **File Upload:** Support for MP3, WAV, WebM, and OGG audio files for testing.
+- **OpenAI Realtime (WebRTC):** Live audio streaming with instant transcription and response.
+- **Provider Comparison:** Easily switch between OpenAI (Standard), OpenAI (Realtime), and Google Gemini.
+- **Performance Metrics:** Real-time tracking of processing time, token usage (input/output), and estimated cost in USD.
+- **Czech Language Optimization:** Specifically tuned prompts for Czech language recognition.
+- **Automatic Data Extraction:** AI parses spoken commands into structured reservation data.
+- **Local Storage:** Save and manage reservations in browser localStorage.
 
 ## 🛠️ Tech Stack
 
 - **Framework:** Next.js 16.1.1 (App Router, Turbopack)
 - **UI/Styling:** Tailwind CSS 4.x, Custom Shadcn-style components
 - **AI Integration:** 
-  - OpenAI Whisper (transcription) + GPT-4o-mini (extraction)
-  - Google Gemini 2.0 Flash (audio understanding + extraction)
+  - **OpenAI Realtime API:** WebRTC-based low-latency streaming (`gpt-4o-realtime-preview`).
+  - **OpenAI Standard:** Whisper API (transcription) + GPT-4o-mini (extraction).
+  - **Google Gemini:** Gemini 2.0 Flash (native audio understanding + extraction).
 - **Language:** TypeScript, React 19.2.3
 
 ## 📦 How to Run
@@ -46,67 +49,35 @@ An AI-powered voice-to-reservation tool that compares real-time AI voice models 
    ```
    Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## 📊 Performance & Cost Tracking
+
+The app automatically calculates metrics for every request:
+- **Duration:** Total time from recording end to structured data extraction.
+- **Tokens:** Exact count of input and output tokens returned by the APIs.
+- **Estimated Cost:** Real-time cost calculation based on current pricing (GPT-4o-mini, Realtime audio/text tokens, Whisper per-minute rate).
+
 ## 🇨🇿 Czech Language Support
 
-Since Czech can be confused with Polish by AI models, I implemented several optimizations:
-
-### OpenAI Whisper
-```typescript
-formData.append("language", "cs");
-formData.append("prompt", "Toto je nahrávka v českém jazyce. Rezervace, termín, klient, pondělí, úterý, středa...");
-```
-- **Language parameter:** Forces Czech (`cs`) language detection
-- **Prompt parameter:** Provides context with common Czech words (days, months, "rezervace", "termín") to help Whisper understand the domain
-
-### Google Gemini
-```typescript
-text: `DŮLEŽITÉ: Toto audio je v ČESKÉM jazyce (čeština, Czech language, NOT Polish).
-Česká slova která mohou zaznít: rezervace, termín, pondělí, úterý...
-Česká jména: Novák, Svoboda, Dvořák, Černý, Procházka...`
-```
-- **Explicit language instruction:** Clear statement that audio is Czech, NOT Polish
-- **Word hints:** Common Czech reservation terms and day names
-- **Name hints:** Typical Czech surnames to help with client name recognition
-
-## 🧠 How It Works
-
-1. **Audio Input:** User records via microphone or uploads an audio file
-2. **Provider Selection:** Choose between OpenAI or Gemini for processing
-3. **Transcription:**
-   - **OpenAI:** Whisper API transcribes audio → GPT-4o-mini extracts reservation data
-   - **Gemini:** Gemini 2.0 Flash handles both transcription and extraction in one call
-4. **Data Extraction:** AI parses the text into structured JSON:
-   ```json
-   {
-     "clientName": "Jan Novák",
-     "date": "2026-01-20",
-     "time": "14:00",
-     "notes": ""
-   }
-   ```
-5. **User Review:** Edit extracted data if needed and save to localStorage
+Since Czech can be confused with Polish by AI models, several optimizations are implemented:
+- **Whisper Prompting:** Specific Czech context words (days, months, domain terms) are sent to Whisper.
+- **Realtime Instructions:** Explicit "Czech, NOT Polish" instructions sent to the Realtime session.
+- **Gemini Hints:** Surnames and day names provided to Gemini to improve entity recognition.
 
 ## 📁 Project Structure
 
 ```
 src/
 ├── app/
-│   ├── api/transcribe/route.ts  # AI transcription API
-│   ├── globals.css
-│   ├── layout.tsx
-│   └── page.tsx
+│   ├── api/
+│   │   ├── transcribe/route.ts   # Standard transcription API
+│   │   └── realtime/session/route.ts # Realtime session helper
+│   ├── page.tsx                  # Main App Dashboard
+│   └── layout.tsx
 ├── components/
-│   ├── ui/                      # Button, Card, Input, Switch
-│   ├── ProviderSwitch.tsx       # OpenAI/Gemini toggle
-│   ├── VoiceRecorder.tsx        # Recording + file upload
-│   ├── ReservationCard.tsx      # Extracted data display
-│   └── ReservationList.tsx      # Saved reservations
-└── types/index.ts
+│   ├── VoiceRecorder.tsx         # Standard Recording & Upload
+│   ├── RealtimeRecorder.tsx      # WebRTC Streaming Component
+│   ├── MetricsDisplay.tsx        # Usage & Cost Component
+│   ├── ProviderSwitch.tsx        # Provider Toggle
+│   └── ReservationCard/List.tsx  # Data Management
+└── types/index.ts                # Type definitions & Pricing
 ```
-
-## 🔮 Future Improvements
-
-- **Real-time streaming:** Use WebSocket for live transcription during recording
-- **Database storage:** Replace localStorage with PostgreSQL/SQLite
-- **Multi-language support:** Add language selector for other languages
-- **Response time comparison:** Display latency metrics for both providers

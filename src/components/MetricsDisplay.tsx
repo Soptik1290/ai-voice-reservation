@@ -6,14 +6,20 @@ import { cn } from "@/lib/utils";
 
 interface MetricsDisplayProps {
     metrics: UsageMetrics;
-    provider: "openai" | "gemini";
+    provider: "openai" | "gemini" | "openai-realtime";
 }
 
 export function MetricsDisplay({ metrics, provider }: MetricsDisplayProps) {
-    const accentClass = provider === "openai" ? "text-emerald-400" : "text-blue-400";
+    const accentClass = provider === "openai"
+        ? "text-emerald-400"
+        : provider === "openai-realtime"
+            ? "text-purple-400"
+            : "text-blue-400";
     const bgClass = provider === "openai"
         ? "bg-emerald-500/10 border-emerald-500/20"
-        : "bg-blue-500/10 border-blue-500/20";
+        : provider === "openai-realtime"
+            ? "bg-purple-500/10 border-purple-500/20"
+            : "bg-blue-500/10 border-blue-500/20";
 
     return (
         <div className={cn(

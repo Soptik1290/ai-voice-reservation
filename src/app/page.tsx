@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { ProviderSwitch } from "@/components/ProviderSwitch";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
+import { RealtimeRecorder } from "@/components/RealtimeRecorder";
 import { ReservationCard } from "@/components/ReservationCard";
 import { ReservationList } from "@/components/ReservationList";
 import { MetricsDisplay } from "@/components/MetricsDisplay";
@@ -80,14 +81,22 @@ export default function Home() {
                     <ProviderSwitch provider={provider} onProviderChange={setProvider} />
                 </div>
 
-                {/* Voice Recorder */}
+                {/* Voice Recorder - different component for realtime */}
                 <div className="flex justify-center mb-12">
-                    <VoiceRecorder
-                        provider={provider}
-                        onTranscription={handleTranscription}
-                        isProcessing={isProcessing}
-                        setIsProcessing={setIsProcessing}
-                    />
+                    {provider === "openai-realtime" ? (
+                        <RealtimeRecorder
+                            onTranscription={handleTranscription}
+                            isProcessing={isProcessing}
+                            setIsProcessing={setIsProcessing}
+                        />
+                    ) : (
+                        <VoiceRecorder
+                            provider={provider}
+                            onTranscription={handleTranscription}
+                            isProcessing={isProcessing}
+                            setIsProcessing={setIsProcessing}
+                        />
+                    )}
                 </div>
 
                 {/* Metrics Display */}
@@ -98,7 +107,7 @@ export default function Home() {
                 )}
 
                 {/* Transcription Display */}
-                {transcription && (
+                {transcription && provider !== "openai-realtime" && (
                     <div className="mb-8 p-4 rounded-xl bg-secondary/30 border border-border/50 backdrop-blur-sm">
                         <p className="text-sm text-muted-foreground mb-1">Rozpoznaný text:</p>
                         <p className="text-foreground italic">&ldquo;{transcription}&rdquo;</p>

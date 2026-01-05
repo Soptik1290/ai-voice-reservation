@@ -2,6 +2,7 @@
 
 import { AIProvider } from "@/types";
 import { cn } from "@/lib/utils";
+import { Zap } from "lucide-react";
 
 interface ProviderSwitchProps {
     provider: AIProvider;
@@ -10,11 +11,11 @@ interface ProviderSwitchProps {
 
 export function ProviderSwitch({ provider, onProviderChange }: ProviderSwitchProps) {
     return (
-        <div className="flex items-center gap-2 p-1 rounded-xl bg-secondary/50 backdrop-blur-sm border border-border/50">
+        <div className="flex flex-wrap items-center justify-center gap-2 p-1 rounded-xl bg-secondary/50 backdrop-blur-sm border border-border/50">
             <button
                 onClick={() => onProviderChange("openai")}
                 className={cn(
-                    "relative px-6 py-3 rounded-lg font-medium text-sm transition-all duration-300",
+                    "relative px-4 py-3 rounded-lg font-medium text-sm transition-all duration-300",
                     provider === "openai"
                         ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25"
                         : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
@@ -27,10 +28,27 @@ export function ProviderSwitch({ provider, onProviderChange }: ProviderSwitchPro
                     OpenAI
                 </span>
             </button>
+
+            <button
+                onClick={() => onProviderChange("openai-realtime")}
+                className={cn(
+                    "relative px-4 py-3 rounded-lg font-medium text-sm transition-all duration-300",
+                    provider === "openai-realtime"
+                        ? "bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-lg shadow-purple-500/25"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                )}
+            >
+                <span className="relative z-10 flex items-center gap-2">
+                    <Zap className="w-5 h-5" />
+                    Realtime
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/20 font-normal">LIVE</span>
+                </span>
+            </button>
+
             <button
                 onClick={() => onProviderChange("gemini")}
                 className={cn(
-                    "relative px-6 py-3 rounded-lg font-medium text-sm transition-all duration-300",
+                    "relative px-4 py-3 rounded-lg font-medium text-sm transition-all duration-300",
                     provider === "gemini"
                         ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/25"
                         : "text-muted-foreground hover:text-foreground hover:bg-accent/50"

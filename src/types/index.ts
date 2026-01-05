@@ -4,11 +4,11 @@ export interface Reservation {
     date: string;
     time?: string;
     notes?: string;
-    provider: 'openai' | 'gemini';
+    provider: 'openai' | 'gemini' | 'openai-realtime';
     createdAt: string;
 }
 
-export type AIProvider = 'openai' | 'gemini';
+export type AIProvider = 'openai' | 'gemini' | 'openai-realtime';
 
 export interface UsageMetrics {
     durationMs: number;
@@ -31,6 +31,11 @@ export const PRICING = {
         gpt4oMini: {
             input: 0.15,   // per 1M tokens
             output: 0.60,  // per 1M tokens
+        },
+        realtime: {
+            audio: 100.00,  // per 1M audio tokens (input)
+            audioOutput: 200.00, // per 1M audio tokens (output)
+            text: 5.00,    // per 1M text tokens
         }
     },
     gemini: {
