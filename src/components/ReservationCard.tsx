@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Reservation } from "@/types";
+import { Reservation, AIProvider } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 interface ReservationCardProps {
     reservation: Partial<Reservation>;
     onSave: (reservation: Reservation) => void;
-    provider: "openai" | "gemini";
+    provider: AIProvider;
 }
 
 export function ReservationCard({ reservation, onSave, provider }: ReservationCardProps) {
@@ -31,13 +31,58 @@ export function ReservationCard({ reservation, onSave, provider }: ReservationCa
         onSave(fullReservation);
     };
 
-    const gradientClass = provider === "openai"
-        ? "from-emerald-500/10 to-teal-500/10 border-emerald-500/20"
-        : "from-blue-500/10 to-indigo-500/10 border-blue-500/20";
+    const getGradientClass = () => {
+        switch (provider) {
+            case "openai": return "from-emerald-500/10 to-teal-500/10 border-emerald-500/20";
+            case "openai-realtime": return "from-purple-500/10 to-violet-500/10 border-purple-500/20";
+            case "gemini": return "from-blue-500/10 to-indigo-500/10 border-blue-500/20";
+            case "gemini-live": return "from-cyan-500/10 to-teal-500/10 border-cyan-500/20";
+            default: return "from-emerald-500/10 to-teal-500/10 border-emerald-500/20";
+        }
+    };
 
-    const accentClass = provider === "openai"
-        ? "text-emerald-400"
-        : "text-blue-400";
+    const getAccentClass = () => {
+        switch (provider) {
+            case "openai": return "text-emerald-400";
+            case "openai-realtime": return "text-purple-400";
+            case "gemini": return "text-blue-400";
+            case "gemini-live": return "text-cyan-400";
+            default: return "text-emerald-400";
+        }
+    };
+
+    const getButtonClass = () => {
+        switch (provider) {
+            case "openai": return "bg-emerald-500 hover:bg-emerald-600";
+            case "openai-realtime": return "bg-purple-500 hover:bg-purple-600";
+            case "gemini": return "bg-blue-500 hover:bg-blue-600";
+            case "gemini-live": return "bg-cyan-500 hover:bg-cyan-600";
+            default: return "bg-emerald-500 hover:bg-emerald-600";
+        }
+    };
+
+    const getProviderLabel = () => {
+        switch (provider) {
+            case "openai": return "OpenAI";
+            case "openai-realtime": return "OpenAI Realtime";
+            case "gemini": return "Gemini";
+            case "gemini-live": return "Gemini Live";
+            default: return "AI";
+        }
+    };
+
+    const getDotClass = () => {
+        switch (provider) {
+            case "openai": return "bg-emerald-400";
+            case "openai-realtime": return "bg-purple-400";
+            case "gemini": return "bg-blue-400";
+            case "gemini-live": return "bg-cyan-400";
+            default: return "bg-emerald-400";
+        }
+    };
+
+    const gradientClass = getGradientClass();
+    const accentClass = getAccentClass();
 
     return (
         <Card className={cn(
@@ -47,14 +92,11 @@ export function ReservationCard({ reservation, onSave, provider }: ReservationCa
             <CardHeader className="pb-2">
                 <CardTitle className="flex items-center justify-between text-lg">
                     <span className="flex items-center gap-2">
-                        <div className={cn(
-                            "w-2 h-2 rounded-full animate-pulse",
-                            provider === "openai" ? "bg-emerald-400" : "bg-blue-400"
-                        )} />
+                        <div className={cn("w-2 h-2 rounded-full animate-pulse", getDotClass())} />
                         Extrahovaná rezervace
                     </span>
                     <span className={cn("text-xs font-normal px-2 py-1 rounded-full bg-secondary", accentClass)}>
-                        {provider === "openai" ? "OpenAI" : "Gemini"}
+                        {getProviderLabel()}
                     </span>
                 </CardTitle>
             </CardHeader>
@@ -142,10 +184,7 @@ export function ReservationCard({ reservation, onSave, provider }: ReservationCa
                             onClick={() => {
                                 setIsEditing(false);
                             }}
-                            className={provider === "openai"
-                                ? "bg-emerald-500 hover:bg-emerald-600"
-                                : "bg-blue-500 hover:bg-blue-600"
-                            }
+                            className={getButtonClass()}
                         >
                             <Check className="w-4 h-4 mr-1" />
                             Potvrdit
@@ -160,10 +199,7 @@ export function ReservationCard({ reservation, onSave, provider }: ReservationCa
                         <Button
                             size="sm"
                             onClick={handleSave}
-                            className={provider === "openai"
-                                ? "bg-emerald-500 hover:bg-emerald-600"
-                                : "bg-blue-500 hover:bg-blue-600"
-                            }
+                            className={getButtonClass()}
                         >
                             <Save className="w-4 h-4 mr-1" />
                             Uložit
