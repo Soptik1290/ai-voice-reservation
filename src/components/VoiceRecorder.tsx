@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AIProvider, TranscriptionResult } from "@/types";
-import { Mic, Square, Loader2 } from "lucide-react";
+import { Mic, Square, Loader2, Upload, FileAudio } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface VoiceRecorderProps {
@@ -21,10 +21,12 @@ export function VoiceRecorder({
 }: VoiceRecorderProps) {
     const [isRecording, setIsRecording] = useState(false);
     const [audioLevel, setAudioLevel] = useState(0);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
     const analyserRef = useRef<AnalyserNode | null>(null);
     const animationFrameRef = useRef<number | null>(null);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     const updateAudioLevel = useCallback(() => {
         if (analyserRef.current) {
@@ -93,6 +95,22 @@ export function VoiceRecorder({
         }
     };
 
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setSelectedFile(file);
+        }
+    };
+
+    const handleFileUpload = async () => {
+        if (!selectedFile) return;
+        await processAudio(selectedFile);
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+    };
+
     const processAudio = async (audioBlob: Blob) => {
         setIsProcessing(true);
 
@@ -122,6 +140,7 @@ export function VoiceRecorder({
 
     return (
         <div className="flex flex-col items-center gap-6">
+            {/* Microphone Recording */}
             <div className="relative">
                 {/* Pulsing rings animation */}
                 {isRecording && (
@@ -187,6 +206,67 @@ export function VoiceRecorder({
                     ))}
                 </div>
             )}
+
+            {/* Divider */}
+            <div className="flex items-center gap-4 w-full max-w-xs">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs text-muted-foreground">nebo</span>
+                <div className="flex-1 h-px bg-border" />
+            </div>
+
+            {/* File Upload */}
+            <div className="flex flex-col items-center gap-3">
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="audio/mp3,audio/mpeg,audio/wav,audio/webm,audio/ogg,.mp3,.wav,.webm,.ogg"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    id="audio-upload"
+                />
+                <label
+                    htmlFor="audio-upload"
+                    className={cn(
+                        "flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed cursor-pointer transition-all",
+                        "border-border hover:border-primary/50 hover:bg-accent/50",
+                        selectedFile && "border-primary bg-primary/10"
+                    )}
+                >
+                    <Upload className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
+                        {selectedFile ? selectedFile.name : "Nahrát audio soubor"}
+                    </span>
+                </label>
+
+                {selectedFile && (
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <FileAudio className="w-4 h-4" />
+                            <span>{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</span>
+                        </div>
+                        <Button
+                            size="sm"
+                            onClick={handleFileUpload}
+                            disabled={isProcessing}
+                            className={provider === "openai"
+                                ? "bg-emerald-500 hover:bg-emerald-600"
+                                : "bg-blue-500 hover:bg-blue-600"
+                            }
+                        >
+                            {isProcessing ? (
+                                <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                            ) : (
+                                <Upload className="w-4 h-4 mr-1" />
+                            )}
+                            Zpracovat
+                        </Button>
+                    </div>
+                )}
+
+                <p className="text-xs text-muted-foreground">
+                    Podporované formáty: MP3, WAV, WebM, OGG
+                </p>
+            </div>
         </div>
     );
 }
