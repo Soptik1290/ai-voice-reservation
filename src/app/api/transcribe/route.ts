@@ -66,6 +66,8 @@ async function processWithOpenAI(audioBuffer: Buffer): Promise<{ transcription: 
     formData.append("file", new Blob([new Uint8Array(audioBuffer)], { type: "audio/webm" }), "audio.webm");
     formData.append("model", "whisper-1");
     formData.append("language", "cs");
+    // Prompt helps Whisper understand context and spelling
+    formData.append("prompt", "Toto je nahrávka v českém jazyce. Rezervace, termín, klient, pondělí, úterý, středa, čtvrtek, pátek, sobota, neděle, leden, únor, březen, duben, květen, červen, červenec, srpen, září, říjen, listopad, prosinec.");
 
     const transcribeResponse = await fetch("https://api.openai.com/v1/audio/transcriptions", {
         method: "POST",
@@ -147,12 +149,16 @@ async function processWithGemini(audioBuffer: Buffer): Promise<{ transcription: 
                                 },
                             },
                             {
-                                text: `Přepiš audio do textu (česky). Pak z přepsaného textu extrahuj data rezervace.
+                                text: `DŮLEŽITÉ: Toto audio je v ČESKÉM jazyce (čeština, Czech language, NOT Polish). 
+Přepiš audio do textu v češtině. Pak z přepsaného textu extrahuj data rezervace.
+
+Česká slova která mohou zaznít: rezervace, termín, pondělí, úterý, středa, čtvrtek, pátek, sobota, neděle.
+Česká jména: Novák, Svoboda, Dvořák, Černý, Procházka, Kučera, Veselý, Horák, Němec, Pokorný.
 
 ${SYSTEM_PROMPT}
 
 Odpověz ve formátu:
-TRANSCRIPTION: [přepsaný text]
+TRANSCRIPTION: [přepsaný text v češtině]
 RESERVATION: [JSON objekt s daty rezervace]`,
                             },
                         ],
