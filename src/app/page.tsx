@@ -5,7 +5,8 @@ import { ProviderSwitch } from "@/components/ProviderSwitch";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
 import { ReservationCard } from "@/components/ReservationCard";
 import { ReservationList } from "@/components/ReservationList";
-import { AIProvider, Reservation, TranscriptionResult } from "@/types";
+import { MetricsDisplay } from "@/components/MetricsDisplay";
+import { AIProvider, Reservation, TranscriptionResult, UsageMetrics } from "@/types";
 import { Sparkles } from "lucide-react";
 
 export default function Home() {
@@ -14,6 +15,7 @@ export default function Home() {
     const [savedReservations, setSavedReservations] = useState<Reservation[]>([]);
     const [transcription, setTranscription] = useState<string>("");
     const [isProcessing, setIsProcessing] = useState(false);
+    const [metrics, setMetrics] = useState<UsageMetrics | null>(null);
 
     // Load saved reservations from localStorage
     useEffect(() => {
@@ -33,12 +35,16 @@ export default function Home() {
         if (result.reservation) {
             setCurrentReservation(result.reservation);
         }
+        if (result.metrics) {
+            setMetrics(result.metrics);
+        }
     };
 
     const handleSaveReservation = (reservation: Reservation) => {
         setSavedReservations((prev) => [reservation, ...prev]);
         setCurrentReservation(null);
         setTranscription("");
+        setMetrics(null);
     };
 
     const handleDeleteReservation = (id: string) => {
@@ -83,6 +89,13 @@ export default function Home() {
                         setIsProcessing={setIsProcessing}
                     />
                 </div>
+
+                {/* Metrics Display */}
+                {metrics && (
+                    <div className="mb-8 flex justify-center">
+                        <MetricsDisplay metrics={metrics} provider={provider} />
+                    </div>
+                )}
 
                 {/* Transcription Display */}
                 {transcription && (

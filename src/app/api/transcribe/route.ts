@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { UsageMetrics, PRICING } from "@/types";
 
 // System prompt for reservation extraction
 const SYSTEM_PROMPT = `Jsi asistent pro extrakci dat rezervací z hlasových příkazů.
@@ -14,8 +15,16 @@ Příklad odpovědi: {"clientName": "Jan Novák", "date": "2026-01-20", "time": 
 Pokud je zmíněn den v týdnu (pondělí, úterý, atd.), převeď ho na konkrétní datum.
 Dnešní datum je ${new Date().toISOString().split("T")[0]}.`;
 
+interface ProcessResult {
+    transcription: string;
+    reservation: any;
+    metrics: UsageMetrics;
+}
+
 export async function POST(request: NextRequest) {
     try {
+        const startTime = performance.now();
+
         const formData = await request.formData();
         const audioFile = formData.get("audio") as Blob;
         const provider = formData.get("provider") as string;
@@ -28,22 +37,21 @@ export async function POST(request: NextRequest) {
         const arrayBuffer = await audioFile.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
-        let transcription = "";
-        let reservation = null;
+        let result: ProcessResult;
 
         if (provider === "openai") {
-            const result = await processWithOpenAI(buffer);
-            transcription = result.transcription;
-            reservation = result.reservation;
+            result = await processWithOpenAI(buffer);
         } else {
-            const result = await processWithGemini(buffer);
-            transcription = result.transcription;
-            reservation = result.reservation;
+            result = await processWithGemini(buffer);
         }
 
+        const endTime = performance.now();
+        result.metrics.durationMs = Math.round(endTime - startTime);
+
         return NextResponse.json({
-            text: transcription,
-            reservation,
+            text: result.transcription,
+            reservation: result.reservation,
+            metrics: result.metrics,
         });
     } catch (error) {
         console.error("Error processing audio:", error);
@@ -54,19 +62,22 @@ export async function POST(request: NextRequest) {
     }
 }
 
-async function processWithOpenAI(audioBuffer: Buffer): Promise<{ transcription: string; reservation: any }> {
+async function processWithOpenAI(audioBuffer: Buffer): Promise<ProcessResult> {
     const apiKey = process.env.OPENAI_API_KEY;
 
     if (!apiKey) {
         throw new Error("OPENAI_API_KEY not configured");
     }
 
+    let totalInputTokens = 0;
+    let totalOutputTokens = 0;
+    const audioDurationMinutes = audioBuffer.length / (16000 * 2 * 60); // Rough estimate
+
     // Step 1: Transcribe audio using Whisper
     const formData = new FormData();
     formData.append("file", new Blob([new Uint8Array(audioBuffer)], { type: "audio/webm" }), "audio.webm");
     formData.append("model", "whisper-1");
     formData.append("language", "cs");
-    // Prompt helps Whisper understand context and spelling
     formData.append("prompt", "Toto je nahrávka v českém jazyce. Rezervace, termín, klient, pondělí, úterý, středa, čtvrtek, pátek, sobota, neděle, leden, únor, březen, duben, květen, červen, červenec, srpen, září, říjen, listopad, prosinec.");
 
     const transcribeResponse = await fetch("https://api.openai.com/v1/audio/transcriptions", {
@@ -85,7 +96,7 @@ async function processWithOpenAI(audioBuffer: Buffer): Promise<{ transcription: 
     const transcribeResult = await transcribeResponse.json();
     const transcription = transcribeResult.text;
 
-    // Step 2: Extract reservation data using GPT-4
+    // Step 2: Extract reservation data using GPT-4o-mini
     const extractResponse = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -110,6 +121,12 @@ async function processWithOpenAI(audioBuffer: Buffer): Promise<{ transcription: 
     const extractResult = await extractResponse.json();
     const reservationText = extractResult.choices[0].message.content;
 
+    // Get token usage from GPT response
+    if (extractResult.usage) {
+        totalInputTokens = extractResult.usage.prompt_tokens || 0;
+        totalOutputTokens = extractResult.usage.completion_tokens || 0;
+    }
+
     let reservation = null;
     try {
         reservation = JSON.parse(reservationText);
@@ -117,10 +134,26 @@ async function processWithOpenAI(audioBuffer: Buffer): Promise<{ transcription: 
         console.error("Failed to parse reservation JSON:", reservationText);
     }
 
-    return { transcription, reservation };
+    // Calculate cost
+    const whisperCost = audioDurationMinutes * PRICING.openai.whisper;
+    const gptInputCost = (totalInputTokens / 1_000_000) * PRICING.openai.gpt4oMini.input;
+    const gptOutputCost = (totalOutputTokens / 1_000_000) * PRICING.openai.gpt4oMini.output;
+    const totalCost = whisperCost + gptInputCost + gptOutputCost;
+
+    return {
+        transcription,
+        reservation,
+        metrics: {
+            durationMs: 0, // Will be set by caller
+            tokensInput: totalInputTokens,
+            tokensOutput: totalOutputTokens,
+            tokensTotal: totalInputTokens + totalOutputTokens,
+            estimatedCostUsd: totalCost,
+        },
+    };
 }
 
-async function processWithGemini(audioBuffer: Buffer): Promise<{ transcription: string; reservation: any }> {
+async function processWithGemini(audioBuffer: Buffer): Promise<ProcessResult> {
     const apiKey = process.env.GOOGLE_AI_API_KEY;
 
     if (!apiKey) {
@@ -179,6 +212,11 @@ RESERVATION: [JSON objekt s daty rezervace]`,
     const result = await response.json();
     const content = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
+    // Get token usage from Gemini response
+    const usageMetadata = result.usageMetadata || {};
+    const tokensInput = usageMetadata.promptTokenCount || 0;
+    const tokensOutput = usageMetadata.candidatesTokenCount || 0;
+
     // Parse the response
     let transcription = "";
     let reservation = null;
@@ -197,5 +235,20 @@ RESERVATION: [JSON objekt s daty rezervace]`,
         }
     }
 
-    return { transcription, reservation };
+    // Calculate cost
+    const inputCost = (tokensInput / 1_000_000) * PRICING.gemini.flash.input;
+    const outputCost = (tokensOutput / 1_000_000) * PRICING.gemini.flash.output;
+    const totalCost = inputCost + outputCost;
+
+    return {
+        transcription,
+        reservation,
+        metrics: {
+            durationMs: 0, // Will be set by caller
+            tokensInput,
+            tokensOutput,
+            tokensTotal: tokensInput + tokensOutput,
+            estimatedCostUsd: totalCost,
+        },
+    };
 }
