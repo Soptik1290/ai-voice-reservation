@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { ProviderSwitch } from "@/components/ProviderSwitch";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
 import { RealtimeRecorder } from "@/components/RealtimeRecorder";
+import { GeminiLiveRecorder } from "@/components/GeminiLiveRecorder";
 import { ReservationCard } from "@/components/ReservationCard";
 import { ReservationList } from "@/components/ReservationList";
 import { MetricsDisplay } from "@/components/MetricsDisplay";
@@ -52,6 +53,38 @@ export default function Home() {
         setSavedReservations((prev) => prev.filter((r) => r.id !== id));
     };
 
+    const renderRecorder = () => {
+        switch (provider) {
+            case "openai-realtime":
+                return (
+                    <RealtimeRecorder
+                        onTranscription={handleTranscription}
+                        isProcessing={isProcessing}
+                        setIsProcessing={setIsProcessing}
+                    />
+                );
+            case "gemini-live":
+                return (
+                    <GeminiLiveRecorder
+                        onTranscription={handleTranscription}
+                        isProcessing={isProcessing}
+                        setIsProcessing={setIsProcessing}
+                    />
+                );
+            default:
+                return (
+                    <VoiceRecorder
+                        provider={provider}
+                        onTranscription={handleTranscription}
+                        isProcessing={isProcessing}
+                        setIsProcessing={setIsProcessing}
+                    />
+                );
+        }
+    };
+
+    const isLiveProvider = provider === "openai-realtime" || provider === "gemini-live";
+
     return (
         <main className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
             {/* Decorative background elements */}
@@ -71,8 +104,8 @@ export default function Home() {
                         Hlasové rezervace
                     </h1>
                     <p className="text-muted-foreground max-w-xl mx-auto">
-                        Porovnejte realtime AI modely od OpenAI a Google. Nahrajte hlasový příkaz
-                        a sledujte, jak AI extrahuje data rezervace.
+                        Porovnejte 4 AI modely: OpenAI, OpenAI Realtime, Gemini a Gemini Live.
+                        Nahrajte hlasový příkaz a sledujte výsledky.
                     </p>
                 </header>
 
@@ -81,22 +114,9 @@ export default function Home() {
                     <ProviderSwitch provider={provider} onProviderChange={setProvider} />
                 </div>
 
-                {/* Voice Recorder - different component for realtime */}
+                {/* Voice Recorder - different component based on provider */}
                 <div className="flex justify-center mb-12">
-                    {provider === "openai-realtime" ? (
-                        <RealtimeRecorder
-                            onTranscription={handleTranscription}
-                            isProcessing={isProcessing}
-                            setIsProcessing={setIsProcessing}
-                        />
-                    ) : (
-                        <VoiceRecorder
-                            provider={provider}
-                            onTranscription={handleTranscription}
-                            isProcessing={isProcessing}
-                            setIsProcessing={setIsProcessing}
-                        />
-                    )}
+                    {renderRecorder()}
                 </div>
 
                 {/* Metrics Display */}
@@ -106,8 +126,8 @@ export default function Home() {
                     </div>
                 )}
 
-                {/* Transcription Display */}
-                {transcription && provider !== "openai-realtime" && (
+                {/* Transcription Display (only for non-live providers) */}
+                {transcription && !isLiveProvider && (
                     <div className="mb-8 p-4 rounded-xl bg-secondary/30 border border-border/50 backdrop-blur-sm">
                         <p className="text-sm text-muted-foreground mb-1">Rozpoznaný text:</p>
                         <p className="text-foreground italic">&ldquo;{transcription}&rdquo;</p>

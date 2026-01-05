@@ -4,11 +4,11 @@ export interface Reservation {
     date: string;
     time?: string;
     notes?: string;
-    provider: 'openai' | 'gemini' | 'openai-realtime';
+    provider: 'openai' | 'gemini' | 'openai-realtime' | 'gemini-live';
     createdAt: string;
 }
 
-export type AIProvider = 'openai' | 'gemini' | 'openai-realtime';
+export type AIProvider = 'openai' | 'gemini' | 'openai-realtime' | 'gemini-live';
 
 export interface UsageMetrics {
     durationMs: number;
@@ -42,6 +42,12 @@ export const PRICING = {
         flash: {
             input: 0.075,  // per 1M tokens
             output: 0.30,  // per 1M tokens
+        },
+        live: {
+            audioInput: 0.70,   // per 1M audio tokens
+            audioOutput: 2.80,  // per 1M audio tokens
+            textInput: 0.15,    // per 1M text tokens
+            textOutput: 0.60,   // per 1M text tokens
         }
     }
 };

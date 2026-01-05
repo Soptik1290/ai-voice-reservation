@@ -6,20 +6,32 @@ import { cn } from "@/lib/utils";
 
 interface MetricsDisplayProps {
     metrics: UsageMetrics;
-    provider: "openai" | "gemini" | "openai-realtime";
+    provider: "openai" | "gemini" | "openai-realtime" | "gemini-live";
 }
 
 export function MetricsDisplay({ metrics, provider }: MetricsDisplayProps) {
-    const accentClass = provider === "openai"
-        ? "text-emerald-400"
-        : provider === "openai-realtime"
-            ? "text-purple-400"
-            : "text-blue-400";
-    const bgClass = provider === "openai"
-        ? "bg-emerald-500/10 border-emerald-500/20"
-        : provider === "openai-realtime"
-            ? "bg-purple-500/10 border-purple-500/20"
-            : "bg-blue-500/10 border-blue-500/20";
+    const getAccentClass = () => {
+        switch (provider) {
+            case "openai": return "text-emerald-400";
+            case "openai-realtime": return "text-purple-400";
+            case "gemini": return "text-blue-400";
+            case "gemini-live": return "text-cyan-400";
+            default: return "text-emerald-400";
+        }
+    };
+
+    const getBgClass = () => {
+        switch (provider) {
+            case "openai": return "bg-emerald-500/10 border-emerald-500/20";
+            case "openai-realtime": return "bg-purple-500/10 border-purple-500/20";
+            case "gemini": return "bg-blue-500/10 border-blue-500/20";
+            case "gemini-live": return "bg-cyan-500/10 border-cyan-500/20";
+            default: return "bg-emerald-500/10 border-emerald-500/20";
+        }
+    };
+
+    const accentClass = getAccentClass();
+    const bgClass = getBgClass();
 
     return (
         <div className={cn(
