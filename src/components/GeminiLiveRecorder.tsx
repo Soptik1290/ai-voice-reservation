@@ -74,7 +74,8 @@ export function GeminiLiveRecorder({
             }
 
             // Connect to Gemini Live WebSocket
-            const model = "gemini-2.5-flash-native-audio-preview-12-2025";
+            // Note: gemini-2.5-flash-native-audio-preview nefunguje s WebSocket API (tested Jan 2026)
+            const model = "gemini-2.0-flash-exp";
             const wsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${apiKey}`;
 
             const ws = new WebSocket(wsUrl);
