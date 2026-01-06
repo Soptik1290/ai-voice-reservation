@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 interface VoiceRecorderProps {
     provider: AIProvider;
+    model: string;
     onTranscription: (result: TranscriptionResult) => void;
     isProcessing: boolean;
     setIsProcessing: (value: boolean) => void;
@@ -15,6 +16,7 @@ interface VoiceRecorderProps {
 
 export function VoiceRecorder({
     provider,
+    model,
     onTranscription,
     isProcessing,
     setIsProcessing
@@ -118,6 +120,7 @@ export function VoiceRecorder({
             const formData = new FormData();
             formData.append("audio", audioBlob);
             formData.append("provider", provider);
+            formData.append("model", model);
 
             const response = await fetch("/api/transcribe", {
                 method: "POST",

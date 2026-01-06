@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
         const formData = await request.formData();
         const audioFile = formData.get("audio") as Blob;
         const provider = formData.get("provider") as string;
+        const model = formData.get("model") as string || (provider === "openai" ? "gpt-4o-mini" : "gemini-2.0-flash");
 
         if (!audioFile) {
             return NextResponse.json({ error: "No audio file provided" }, { status: 400 });
@@ -40,9 +41,9 @@ export async function POST(request: NextRequest) {
         let result: ProcessResult;
 
         if (provider === "openai") {
-            result = await processWithOpenAI(buffer);
+            result = await processWithOpenAI(buffer, model);
         } else {
-            result = await processWithGemini(buffer);
+            result = await processWithGemini(buffer, model);
         }
 
         const endTime = performance.now();
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
 }
 
-async function processWithOpenAI(audioBuffer: Buffer): Promise<ProcessResult> {
+async function processWithOpenAI(audioBuffer: Buffer, model: string): Promise<ProcessResult> {
     const apiKey = process.env.OPENAI_API_KEY;
 
     if (!apiKey) {
@@ -96,7 +97,8 @@ async function processWithOpenAI(audioBuffer: Buffer): Promise<ProcessResult> {
     const transcribeResult = await transcribeResponse.json();
     const transcription = transcribeResult.text;
 
-    // Step 2: Extract reservation data using GPT-4o-mini
+    // Step 2: Extract reservation data using selected model
+    console.log(`Using OpenAI model: ${model}`);
     const extractResponse = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -104,7 +106,7 @@ async function processWithOpenAI(audioBuffer: Buffer): Promise<ProcessResult> {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: model, // Use dynamic model
             messages: [
                 { role: "system", content: SYSTEM_PROMPT },
                 { role: "user", content: transcription },
@@ -153,7 +155,7 @@ async function processWithOpenAI(audioBuffer: Buffer): Promise<ProcessResult> {
     };
 }
 
-async function processWithGemini(audioBuffer: Buffer): Promise<ProcessResult> {
+async function processWithGemini(audioBuffer: Buffer, model: string): Promise<ProcessResult> {
     const apiKey = process.env.GOOGLE_AI_API_KEY;
 
     if (!apiKey) {
@@ -163,9 +165,10 @@ async function processWithGemini(audioBuffer: Buffer): Promise<ProcessResult> {
     // Convert audio to base64
     const base64Audio = audioBuffer.toString("base64");
 
-    // Use Gemini 2.0 Flash for audio understanding and text extraction
+    // Use selected Gemini model for audio understanding and text extraction
+    console.log(`Using Gemini model: ${model}`);
     const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
         {
             method: "POST",
             headers: {

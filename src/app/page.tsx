@@ -8,16 +8,27 @@ import { GeminiLiveRecorder } from "@/components/GeminiLiveRecorder";
 import { ReservationCard } from "@/components/ReservationCard";
 import { ReservationList } from "@/components/ReservationList";
 import { MetricsDisplay } from "@/components/MetricsDisplay";
+import { ModelSelector } from "@/components/ModelSelector";
 import { AIProvider, Reservation, TranscriptionResult, UsageMetrics } from "@/types";
 import { Sparkles } from "lucide-react";
 
 export default function Home() {
     const [provider, setProvider] = useState<AIProvider>("openai");
+    const [selectedModel, setSelectedModel] = useState<string>("gpt-4o-mini");
     const [currentReservation, setCurrentReservation] = useState<Partial<Reservation> | null>(null);
     const [savedReservations, setSavedReservations] = useState<Reservation[]>([]);
     const [transcription, setTranscription] = useState<string>("");
     const [isProcessing, setIsProcessing] = useState(false);
     const [metrics, setMetrics] = useState<UsageMetrics | null>(null);
+
+    // Update default model when provider changes
+    useEffect(() => {
+        if (provider === "openai") {
+            setSelectedModel("gpt-4o-mini");
+        } else if (provider === "gemini") {
+            setSelectedModel("gemini-2.0-flash");
+        }
+    }, [provider]);
 
     // Load saved reservations from localStorage
     useEffect(() => {
@@ -75,6 +86,7 @@ export default function Home() {
                 return (
                     <VoiceRecorder
                         provider={provider}
+                        model={selectedModel}
                         onTranscription={handleTranscription}
                         isProcessing={isProcessing}
                         setIsProcessing={setIsProcessing}
@@ -110,9 +122,20 @@ export default function Home() {
                 </header>
 
                 {/* Provider Switch */}
-                <div className="flex justify-center mb-12">
+                <div className="flex justify-center mb-8">
                     <ProviderSwitch provider={provider} onProviderChange={setProvider} />
                 </div>
+
+                {/* Model Selector (only for non-realtime providers) */}
+                {!isLiveProvider && (
+                    <div className="flex justify-center mb-8">
+                        <ModelSelector
+                            provider={provider}
+                            selectedModel={selectedModel}
+                            onModelChange={setSelectedModel}
+                        />
+                    </div>
+                )}
 
                 {/* Voice Recorder - different component based on provider */}
                 <div className="flex justify-center mb-12">
