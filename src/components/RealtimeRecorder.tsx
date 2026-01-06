@@ -197,23 +197,76 @@ export function RealtimeRecorder({
 
     const parseReservation = (text: string) => {
         // Try to extract reservation data from AI response
-        const nameMatch = text.match(/pro\s+([A-ZÁ-Ža-zá-ž]+\s+[A-ZÁ-Ža-zá-ž]+)/i);
-        const dateMatch = text.match(/(\d{1,2})\.?\s*(\d{1,2})\.?\s*(\d{4})?|(\d{4}-\d{2}-\d{2})/);
-        const timeMatch = text.match(/v?\s*(\d{1,2})[:\.](\d{2})/);
+        // Match declined Czech names like "pro Tomáše Starka" or "pro Jana Nováka"
+        const namePatterns = [
+            /pro\s+([\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+\s+[\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+)/i,
+            /Jméno:\s*([\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+\s+[\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+)/i,
+            /klient[a]?:\s*([\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+\s+[\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+)/i,
+        ];
 
-        if (nameMatch || dateMatch) {
-            let date = "";
-            if (dateMatch) {
-                if (dateMatch[4]) {
-                    date = dateMatch[4];
-                } else {
-                    const day = dateMatch[1].padStart(2, "0");
-                    const month = dateMatch[2].padStart(2, "0");
-                    const year = dateMatch[3] || new Date().getFullYear();
-                    date = `${year}-${month}-${day}`;
-                }
+        let clientName: string | undefined;
+        for (const pattern of namePatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                clientName = match[1];
+                break;
             }
+        }
 
+        // Date patterns - be careful not to match time as date
+        const datePatterns = [
+            /(\d{4}-\d{2}-\d{2})/,  // ISO format
+            /na\s+(\d{1,2})\.\s*(ledna|února|března|dubna|května|června|července|srpna|září|října|listopadu|prosince)/i, // "na 8. dubna"
+            /(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})/,  // "8.4.2026"
+        ];
+
+        let date = "";
+        const monthNames: Record<string, string> = {
+            'ledna': '01', 'února': '02', 'března': '03', 'dubna': '04',
+            'května': '05', 'června': '06', 'července': '07', 'srpna': '08',
+            'září': '09', 'října': '10', 'listopadu': '11', 'prosince': '12'
+        };
+
+        for (const pattern of datePatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                if (match[0].includes('-') && match[0].length === 10) {
+                    date = match[1];
+                } else if (match[2] && monthNames[match[2].toLowerCase()]) {
+                    // Czech month name: "8. dubna"
+                    const day = match[1].padStart(2, '0');
+                    const month = monthNames[match[2].toLowerCase()];
+                    const year = new Date().getFullYear();
+                    date = `${year}-${month}-${day}`;
+                } else if (match[1] && match[2] && match[3]) {
+                    // Numeric format: "8.4.2026"
+                    const day = match[1].padStart(2, '0');
+                    const month = match[2].padStart(2, '0');
+                    date = `${match[3]}-${month}-${day}`;
+                }
+                if (date) break;
+            }
+        }
+
+        // Time patterns - handle "v 18 hodin", "v 18:00", "18:30"
+        const timePatterns = [
+            /v\s+(\d{1,2})\s*hodin/i,                    // "v 18 hodin" -> 18:00
+            /ve?\s+(\d{1,2})[:\.](\d{2})/i,              // "v 18:30" or "ve 14.00"
+            /(\d{1,2})[:\.](\d{2})\s*hodin/i,            // "18:30 hodin"
+        ];
+
+        let time: string | undefined;
+        for (const pattern of timePatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                const hours = match[1].padStart(2, '0');
+                const minutes = match[2] ? match[2] : '00';  // Default to :00 if no minutes
+                time = `${hours}:${minutes}`;
+                break;
+            }
+        }
+
+        if (clientName || date) {
             const endTime = performance.now();
             const durationMs = Math.round(endTime - startTimeRef.current);
             const metrics: UsageMetrics = {
@@ -221,17 +274,17 @@ export function RealtimeRecorder({
                 tokensInput: tokensRef.current.input,
                 tokensOutput: tokensRef.current.output,
                 tokensTotal: tokensRef.current.input + tokensRef.current.output,
-                estimatedCostUsd:
-                    // Audio is charged per minute
-                    (durationMs / 60000) * (PRICING.openai.realtime.audioInputPerMinute + PRICING.openai.realtime.audioOutputPerMinute),
+                // Only charge for audio input (user speaking), not full connection time
+                // Estimate ~50% of time is actual speech
+                estimatedCostUsd: (durationMs / 60000) * PRICING.openai.realtime.audioInputPerMinute * 0.5,
             };
 
             onTranscription({
                 text: liveTranscript || text,
                 reservation: {
-                    clientName: nameMatch ? nameMatch[1] : undefined,
+                    clientName,
                     date: date || undefined,
-                    time: timeMatch ? `${timeMatch[1].padStart(2, "0")}:${timeMatch[2]}` : undefined,
+                    time,
                 },
                 metrics,
             });
@@ -281,9 +334,8 @@ Pokud nějaký údaj chybí, vynech ho.`,
                 tokensInput: tokensRef.current.input,
                 tokensOutput: tokensRef.current.output,
                 tokensTotal: tokensRef.current.input + tokensRef.current.output,
-                estimatedCostUsd:
-                    // Audio is charged per minute
-                    (durationMs / 60000) * (PRICING.openai.realtime.audioInputPerMinute + PRICING.openai.realtime.audioOutputPerMinute),
+                // Only charge for audio input (user speaking), estimate ~50% of time
+                estimatedCostUsd: (durationMs / 60000) * PRICING.openai.realtime.audioInputPerMinute * 0.5,
             };
 
             if (liveTranscript) {
