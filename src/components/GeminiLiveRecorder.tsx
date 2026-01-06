@@ -110,9 +110,15 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
                 await startMicrophone(ws);
             };
 
-            ws.onmessage = (event) => {
+            ws.onmessage = async (event) => {
                 try {
-                    const data = JSON.parse(event.data);
+                    let data;
+                    if (event.data instanceof Blob) {
+                        const text = await event.data.text();
+                        data = JSON.parse(text);
+                    } else {
+                        data = JSON.parse(event.data);
+                    }
                     handleGeminiMessage(data);
                 } catch (e) {
                     console.error("Error parsing Gemini message:", e);
