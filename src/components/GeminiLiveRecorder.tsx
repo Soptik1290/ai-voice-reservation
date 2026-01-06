@@ -320,6 +320,9 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
                 },
                 metrics,
             });
+
+            // Auto-disconnect after successful extraction
+            disconnect();
         }
     };
 
