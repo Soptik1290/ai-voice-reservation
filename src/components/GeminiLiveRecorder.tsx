@@ -32,6 +32,13 @@ export function GeminiLiveRecorder({
     const streamRef = useRef<MediaStream | null>(null);
     const isCompleteRef = useRef(false);
 
+    // Store partial reservation data to allow manual completion
+    const reservationRef = useRef<{
+        clientName?: string;
+        date?: string;
+        time?: string;
+    }>({});
+
     const updateAudioLevel = useCallback(() => {
         if (analyserRef.current && isRecording) {
             const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
@@ -57,6 +64,7 @@ export function GeminiLiveRecorder({
         startTimeRef.current = performance.now();
         tokensRef.current = { input: 0, output: 0 };
         setLiveTranscript("");
+        reservationRef.current = {}; // Reset reservation data
 
         try {
             const apiKey = await getApiKey();
@@ -242,7 +250,7 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
     const parseReservation = (text: string) => {
         console.log("Parsing text:", text);
 
-        // Try multiple name patterns - use more inclusive regex for Czech names
+        // Try multiple name patterns
         const namePatterns = [
             /Jméno:\s*([\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+\s+[\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+)/i,
             /pro\s+([\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+\s+[\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+)/i,
@@ -254,6 +262,7 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
             const match = text.match(pattern);
             if (match) {
                 clientName = match[1];
+                reservationRef.current.clientName = clientName; // Update ref
                 console.log("Found name:", clientName);
                 break;
             }
@@ -290,20 +299,26 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
                     const year = match[3] || new Date().getFullYear();
                     date = `${year}-${month}-${day}`;
                 }
-                if (date) break;
+                if (date) {
+                    reservationRef.current.date = date; // Update ref
+                    break;
+                }
             }
         }
 
+        // Time pattern
         const timeMatch = text.match(/(?:Čas:|v|ve)\s*(\d{1,2})[:\.](\d{2})|(\d{1,2})[:\.](\d{2})\s*(?:hodin)?/i);
         let time: string | undefined;
         if (timeMatch) {
             const hours = (timeMatch[1] || timeMatch[3]).padStart(2, '0');
             const minutes = timeMatch[2] || timeMatch[4];
             time = `${hours}:${minutes}`;
+            reservationRef.current.time = time; // Update ref
         }
 
-        // Only trigger when we have BOTH name AND date (complete reservation)
-        if (clientName && date && !isCompleteRef.current) {
+        // Check if we have complete data
+        const currentData = reservationRef.current;
+        if (currentData.clientName && currentData.date && !isCompleteRef.current) {
             console.log("Reservation complete, disconnecting...");
             isCompleteRef.current = true;
 
@@ -321,15 +336,38 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
             onTranscription({
                 text: liveTranscript || text,
                 reservation: {
-                    clientName,
-                    date: date || undefined,
-                    time,
+                    clientName: currentData.clientName,
+                    date: currentData.date,
+                    time: currentData.time,
                 },
                 metrics,
             });
 
             disconnect();
         }
+    };
+
+    const stopAndProcess = () => {
+        const endTime = performance.now();
+        const metrics: UsageMetrics = {
+            durationMs: Math.round(endTime - startTimeRef.current),
+            tokensInput: tokensRef.current.input,
+            tokensOutput: tokensRef.current.output,
+            tokensTotal: tokensRef.current.input + tokensRef.current.output,
+            estimatedCostUsd:
+                (tokensRef.current.input / 1_000_000) * PRICING.gemini.live.audioInput +
+                (tokensRef.current.output / 1_000_000) * PRICING.gemini.live.textOutput,
+        };
+
+        if (liveTranscript) {
+            // Use whatever data we have collected so far
+            onTranscription({
+                text: liveTranscript,
+                reservation: reservationRef.current, // Use stored partial data
+                metrics,
+            });
+        }
+        disconnect();
     };
 
     const disconnect = () => {
@@ -356,27 +394,6 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
         setIsConnected(false);
         setIsRecording(false);
         setAudioLevel(0);
-    };
-
-    const stopAndProcess = () => {
-        const endTime = performance.now();
-        const metrics: UsageMetrics = {
-            durationMs: Math.round(endTime - startTimeRef.current),
-            tokensInput: tokensRef.current.input,
-            tokensOutput: tokensRef.current.output,
-            tokensTotal: tokensRef.current.input + tokensRef.current.output,
-            estimatedCostUsd:
-                (tokensRef.current.input / 1_000_000) * PRICING.gemini.live.audioInput +
-                (tokensRef.current.output / 1_000_000) * PRICING.gemini.live.textOutput,
-        };
-
-        if (liveTranscript) {
-            onTranscription({
-                text: liveTranscript,
-                metrics,
-            });
-        }
-        disconnect();
     };
 
     return (
