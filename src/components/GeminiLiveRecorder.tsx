@@ -236,11 +236,13 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
     };
 
     const parseReservation = (text: string) => {
-        // Try multiple name patterns
+        console.log("Parsing text:", text);
+
+        // Try multiple name patterns - use more inclusive regex for Czech names
         const namePatterns = [
-            /Jméno:\s*([A-ZÁ-Ža-zá-ž]+\s+[A-ZÁ-Ža-zá-ž]+)/i,  // "Jméno: Tomáš Stark"
-            /pro\s+([A-ZÁ-Ža-zá-ž]+\s+[A-ZÁ-Ža-zá-ž]+)/i,    // "pro Tomáše Starka"
-            /klient[a]?:\s*([A-ZÁ-Ža-zá-ž]+\s+[A-ZÁ-Ža-zá-ž]+)/i, // "klient: Tomáš Stark"
+            /Jméno:\s*([\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+\s+[\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+)/i,  // "Jméno: Tomáš Stark"
+            /pro\s+([\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+\s+[\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+)/i,    // "pro Tomáše Starka"
+            /klient[a]?:\s*([\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+\s+[\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+)/i, // "klient: Tomáš Stark"
         ];
 
         let clientName: string | undefined;
@@ -248,6 +250,7 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
             const match = text.match(pattern);
             if (match) {
                 clientName = match[1];
+                console.log("Found name:", clientName);
                 break;
             }
         }
