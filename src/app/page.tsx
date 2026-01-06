@@ -25,8 +25,12 @@ export default function Home() {
     useEffect(() => {
         if (provider === "openai") {
             setSelectedModel("gpt-4o-mini");
+        } else if (provider === "openai-realtime") {
+            setSelectedModel("gpt-4o-mini-realtime-preview");
         } else if (provider === "gemini") {
             setSelectedModel("gemini-2.0-flash");
+        } else if (provider === "gemini-live") {
+            setSelectedModel("gemini-2.5-flash-native-audio-preview");
         }
     }, [provider]);
 
@@ -72,6 +76,7 @@ export default function Home() {
                         onTranscription={handleTranscription}
                         isProcessing={isProcessing}
                         setIsProcessing={setIsProcessing}
+                        model={selectedModel}
                     />
                 );
             case "gemini-live":
@@ -80,6 +85,7 @@ export default function Home() {
                         onTranscription={handleTranscription}
                         isProcessing={isProcessing}
                         setIsProcessing={setIsProcessing}
+                        model={selectedModel}
                     />
                 );
             default:
@@ -126,16 +132,15 @@ export default function Home() {
                     <ProviderSwitch provider={provider} onProviderChange={setProvider} />
                 </div>
 
-                {/* Model Selector (only for non-realtime providers) */}
-                {!isLiveProvider && (
-                    <div className="flex justify-center mb-8">
-                        <ModelSelector
-                            provider={provider}
-                            selectedModel={selectedModel}
-                            onModelChange={setSelectedModel}
-                        />
-                    </div>
-                )}
+                {/* Model Selector (also available when using live providers to pick live audio models) */}
+                <div className="flex justify-center mb-8">
+                    <ModelSelector
+                        provider={provider === "openai" || provider === "openai-realtime" ? "openai" : "gemini"}
+                        selectedModel={selectedModel}
+                        onModelChange={setSelectedModel}
+                        isLive={isLiveProvider}
+                    />
+                </div>
 
                 {/* Voice Recorder - different component based on provider */}
                 <div className="flex justify-center mb-12">

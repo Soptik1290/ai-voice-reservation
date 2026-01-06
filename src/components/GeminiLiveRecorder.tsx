@@ -10,12 +10,14 @@ interface GeminiLiveRecorderProps {
     onTranscription: (result: TranscriptionResult) => void;
     isProcessing: boolean;
     setIsProcessing: (value: boolean) => void;
+    model?: string;
 }
 
 export function GeminiLiveRecorder({
     onTranscription,
     isProcessing,
-    setIsProcessing
+    setIsProcessing,
+    model
 }: GeminiLiveRecorderProps) {
     const [isConnected, setIsConnected] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
@@ -74,8 +76,8 @@ export function GeminiLiveRecorder({
             }
 
             // Connect to Gemini Live WebSocket
-            // Note: gemini-2.5-flash-native-audio-preview nefunguje s WebSocket API (tested Jan 2026)
-            const model = "gemini-2.0-flash-exp";
+            // Note: some native-audio preview models may not be compatible with the WebSocket API (tested Jan 2026)
+            const modelToUse = model || "gemini-2.0-flash-exp";
             const wsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${apiKey}`;
 
             const ws = new WebSocket(wsUrl);
@@ -87,7 +89,7 @@ export function GeminiLiveRecorder({
                 // Send setup message
                 ws.send(JSON.stringify({
                     setup: {
-                        model: `models/${model}`,
+                        model: `models/${modelToUse}`,
                         generationConfig: {
                             responseModalities: ["TEXT"],
                             speechConfig: {

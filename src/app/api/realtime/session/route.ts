@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 // This endpoint creates an ephemeral token for the Realtime API
 // The token is short-lived and safe to use in the browser
-export async function POST() {
+export async function POST(req: Request) {
     const apiKey = process.env.OPENAI_API_KEY;
 
     if (!apiKey) {
@@ -13,6 +13,9 @@ export async function POST() {
     }
 
     try {
+        const body = await req.json().catch(() => ({}));
+        const model = body?.model || "gpt-4o-realtime-preview";
+
         const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
             method: "POST",
             headers: {
@@ -20,7 +23,7 @@ export async function POST() {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                model: "gpt-4o-realtime-preview",
+                model,
                 voice: "alloy",
                 instructions: `Jsi asistent pro vytváření rezervací. Uživatel ti řekne rezervaci v češtině.
 Tvým úkolem je:

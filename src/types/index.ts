@@ -23,6 +23,10 @@ export type AIProvider = 'openai' | 'gemini' | 'openai-realtime' | 'gemini-live'
 export type OpenAIModel = 'gpt-4o-mini' | 'gpt-5-mini';
 export type GeminiModel = 'gemini-2.0-flash' | 'gemini-2.5-flash';
 
+// Live / preview models are separated so they don't appear in the standard selector
+export type OpenAILiveModel = 'gpt-4o-mini-realtime-preview';
+export type GeminiLiveModel = 'gemini-2.5-flash-native-audio-preview';
+
 export interface ModelInfo {
     id: string;
     name: string;
@@ -57,6 +61,24 @@ export const GEMINI_MODELS: Record<GeminiModel, ModelInfo> = {
         name: 'Gemini 2.5 Flash',
         inputPrice: 0.15,
         outputPrice: 0.60
+    }
+};
+
+export const OPENAI_LIVE_MODELS: Record<OpenAILiveModel, ModelInfo> = {
+    'gpt-4o-mini-realtime-preview': {
+        id: 'gpt-4o-mini-realtime-preview',
+        name: 'GPT-4o Mini Realtime Preview',
+        inputPrice: 0.10,
+        outputPrice: 0.40
+    }
+};
+
+export const GEMINI_LIVE_MODELS: Record<GeminiLiveModel, ModelInfo> = {
+    'gemini-2.5-flash-native-audio-preview': {
+        id: 'gemini-2.5-flash-native-audio-preview',
+        name: 'Gemini 2.5 Flash Native Audio Preview',
+        inputPrice: 0.20,
+        outputPrice: 0.80
     }
 };
 
