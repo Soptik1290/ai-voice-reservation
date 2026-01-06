@@ -20,8 +20,8 @@ export interface Reservation {
 export type AIProvider = 'openai' | 'gemini' | 'openai-realtime' | 'gemini-live';
 
 // LLM Model types
-export type OpenAIModel = 'gpt-4o-mini' | 'gpt-5-mini' | 'gpt-5-nano';
-export type GeminiModel = 'gemini-2.0-flash' | 'gemini-2.5-flash' | 'gemini-3.0-flash';
+export type OpenAIModel = 'gpt-4o-mini' | 'gpt-5-mini';
+export type GeminiModel = 'gemini-2.0-flash' | 'gemini-2.5-flash';
 
 export interface ModelInfo {
     id: string;
@@ -40,14 +40,8 @@ export const OPENAI_MODELS: Record<OpenAIModel, ModelInfo> = {
     'gpt-5-mini': {
         id: 'gpt-5-mini',
         name: 'GPT-5 Mini',
-        inputPrice: 0.50,
-        outputPrice: 1.50
-    },
-    'gpt-5-nano': {
-        id: 'gpt-5-nano',
-        name: 'GPT-5 Nano',
-        inputPrice: 0.10,
-        outputPrice: 0.40
+        inputPrice: 0.25,
+        outputPrice: 2.00
     }
 };
 
@@ -63,12 +57,6 @@ export const GEMINI_MODELS: Record<GeminiModel, ModelInfo> = {
         name: 'Gemini 2.5 Flash',
         inputPrice: 0.15,
         outputPrice: 0.60
-    },
-    'gemini-3.0-flash': {
-        id: 'gemini-3.0-flash',
-        name: 'Gemini 3.0 Flash',
-        inputPrice: 0.25,
-        outputPrice: 1.00
     }
 };
 
