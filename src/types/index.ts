@@ -34,9 +34,9 @@ export const PRICING = {
             output: 0.60,  // per 1M tokens
         },
         realtime: {
-            audio: 100.00,  // per 1M audio tokens (input)
-            audioOutput: 200.00, // per 1M audio tokens (output)
-            text: 5.00,    // per 1M text tokens
+            audioInputPerMinute: 0.06,  // per minute of audio input
+            audioOutputPerMinute: 0.24, // per minute of audio output
+            text: 5.00,    // per 1M text tokens (for text responses)
         }
     },
     gemini: {

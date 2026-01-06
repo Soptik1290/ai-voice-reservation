@@ -113,13 +113,15 @@ export function RealtimeRecorder({
                 setIsProcessing(false);
                 animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
 
-                // Send session update to enable transcription
+                // Send session update to enable transcription and set Czech language
                 dc.send(JSON.stringify({
                     type: "session.update",
                     session: {
                         input_audio_transcription: {
-                            model: "whisper-1"
-                        }
+                            model: "whisper-1",
+                            language: "cs"  // Force Czech language
+                        },
+                        instructions: "Uživatel mluví česky. Vždy přepisuj v češtině. Extrahuj rezervační data: jméno, datum, čas."
                     }
                 }));
             };
@@ -213,14 +215,15 @@ export function RealtimeRecorder({
             }
 
             const endTime = performance.now();
+            const durationMs = Math.round(endTime - startTimeRef.current);
             const metrics: UsageMetrics = {
-                durationMs: Math.round(endTime - startTimeRef.current),
+                durationMs,
                 tokensInput: tokensRef.current.input,
                 tokensOutput: tokensRef.current.output,
                 tokensTotal: tokensRef.current.input + tokensRef.current.output,
                 estimatedCostUsd:
-                    (tokensRef.current.input / 1_000_000) * PRICING.openai.realtime.audio +
-                    (tokensRef.current.output / 1_000_000) * PRICING.openai.realtime.audioOutput,
+                    // Audio is charged per minute
+                    (durationMs / 60000) * (PRICING.openai.realtime.audioInputPerMinute + PRICING.openai.realtime.audioOutputPerMinute),
             };
 
             onTranscription({
@@ -272,14 +275,15 @@ Pokud nějaký údaj chybí, vynech ho.`,
 
         setTimeout(() => {
             const endTime = performance.now();
+            const durationMs = Math.round(endTime - startTimeRef.current);
             const metrics: UsageMetrics = {
-                durationMs: Math.round(endTime - startTimeRef.current),
+                durationMs,
                 tokensInput: tokensRef.current.input,
                 tokensOutput: tokensRef.current.output,
                 tokensTotal: tokensRef.current.input + tokensRef.current.output,
                 estimatedCostUsd:
-                    (tokensRef.current.input / 1_000_000) * PRICING.openai.realtime.audio +
-                    (tokensRef.current.output / 1_000_000) * PRICING.openai.realtime.audioOutput,
+                    // Audio is charged per minute
+                    (durationMs / 60000) * (PRICING.openai.realtime.audioInputPerMinute + PRICING.openai.realtime.audioOutputPerMinute),
             };
 
             if (liveTranscript) {
