@@ -194,16 +194,26 @@ export function VoiceRecorder({
             </p>
 
             {isRecording && (
-                <div className="flex items-center gap-1">
-                    {[...Array(20)].map((_, i) => (
-                        <div
-                            key={i}
-                            className="w-1 rounded-full bg-gradient-to-t from-red-500 to-rose-400 transition-all duration-75"
-                            style={{
-                                height: `${Math.random() * audioLevel * 40 + 4}px`,
-                            }}
-                        />
-                    ))}
+                <div className="flex items-end justify-center gap-1 h-16">
+                    {[...Array(24)].map((_, i) => {
+                        const centerDistance = Math.abs(i - 11.5) / 12;
+                        const variation = Math.sin(i * 1.5) * 0.3 + 0.7;
+                        const baseHeight = 6;
+                        const dynamicHeight = audioLevel * 80 * variation * (1 - centerDistance * 0.4);
+                        const height = Math.max(baseHeight, baseHeight + dynamicHeight);
+
+                        return (
+                            <div
+                                key={i}
+                                className="w-1.5 rounded-full bg-gradient-to-t from-red-600 via-rose-500 to-red-400"
+                                style={{
+                                    height: `${height}px`,
+                                    transition: 'height 0.05s ease-out',
+                                    opacity: 0.6 + audioLevel * 0.4,
+                                }}
+                            />
+                        );
+                    })}
                 </div>
             )}
 

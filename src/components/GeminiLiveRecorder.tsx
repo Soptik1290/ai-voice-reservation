@@ -465,18 +465,19 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
                     {[...Array(24)].map((_, i) => {
                         // Create wave-like effect based on position and audio level
                         const centerDistance = Math.abs(i - 11.5) / 12;
-                        const waveHeight = Math.sin((i / 4) + Date.now() / 200) * 0.3;
-                        const baseHeight = 8;
-                        const dynamicHeight = audioLevel * 60 * (1 - centerDistance * 0.5) + waveHeight * 10;
+                        const variation = Math.sin(i * 1.5) * 0.3 + 0.7;
+                        const baseHeight = 6;
+                        const dynamicHeight = audioLevel * 80 * variation * (1 - centerDistance * 0.4);
                         const height = Math.max(baseHeight, baseHeight + dynamicHeight);
 
                         return (
                             <div
                                 key={i}
-                                className="w-1.5 rounded-full bg-gradient-to-t from-cyan-600 via-teal-500 to-cyan-400 transition-all duration-100"
+                                className="w-1.5 rounded-full bg-gradient-to-t from-cyan-600 via-teal-500 to-cyan-400"
                                 style={{
                                     height: `${height}px`,
-                                    opacity: 0.7 + audioLevel * 0.3,
+                                    transition: 'height 0.05s ease-out',
+                                    opacity: 0.6 + audioLevel * 0.4,
                                 }}
                             />
                         );
