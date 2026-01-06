@@ -53,10 +53,19 @@ An AI-powered voice-to-reservation tool that compares 4 real-time AI voice model
 
 | Provider | Type | Latency | Best For |
 |----------|------|---------|----------|
-| OpenAI | Batch | ~2-3s | Accurate transcription |
-| OpenAI Realtime | Live | ~200ms | Instant response |
-| Gemini | Batch | ~1-2s | Cost-effective |
+| OpenAI | Batch | ~2-3s | Accurate transcription, Customizable Models |
+| OpenAI Realtime | Live | ~200ms | Instant response, Natural conversation |
+| Gemini | Batch | ~1-2s | Cost-effective, High speed |
 | Gemini Live | Live | ~300ms | Bidirectional streaming |
+
+## 🔄 Recent Updates (Jan 6, 2026)
+
+- **Model Selector:** Added support for switching between models (GPT-4o Mini, GPT-5 Mini, Gemini 2.0/2.5 Flash) with real-time pricing display.
+- **Audio Visualizer:** Enhanced visualization with wave effects and better responsiveness to audio levels.
+- **Realtime API Fixes:**
+  - Corrected pricing calculation for OpenAI Realtime (per-minute audio billing).
+  - Improved Czech name and time parsing (support for declined names).
+  - Fixed automated disconnection logic for smoother UX.
 
 ## 🇨🇿 Czech Language Support
 
