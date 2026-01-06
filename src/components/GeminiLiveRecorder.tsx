@@ -31,6 +31,7 @@ export function GeminiLiveRecorder({
     const tokensRef = useRef<{ input: number; output: number }>({ input: 0, output: 0 });
     const streamRef = useRef<MediaStream | null>(null);
     const isCompleteRef = useRef(false);
+    const isRecordingRef = useRef(false);
 
     // Store partial reservation data to allow manual completion
     const reservationRef = useRef<{
@@ -40,14 +41,14 @@ export function GeminiLiveRecorder({
     }>({});
 
     const updateAudioLevel = useCallback(() => {
-        if (analyserRef.current && isRecording) {
+        if (analyserRef.current && isRecordingRef.current) {
             const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
             analyserRef.current.getByteFrequencyData(dataArray);
             const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
             setAudioLevel(average / 255);
             animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
         }
-    }, [isRecording]);
+    }, []);
 
     useEffect(() => {
         return () => {
@@ -146,6 +147,7 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
             ws.onclose = () => {
                 setIsConnected(false);
                 setIsRecording(false);
+                isRecordingRef.current = false;
             };
 
         } catch (error) {
@@ -216,6 +218,7 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
             };
 
             setIsRecording(true);
+            isRecordingRef.current = true;
             setIsProcessing(false);
             animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
         } catch (error) {
@@ -393,6 +396,7 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
         }
         setIsConnected(false);
         setIsRecording(false);
+        isRecordingRef.current = false;
         setAudioLevel(0);
     };
 

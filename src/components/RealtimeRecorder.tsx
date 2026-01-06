@@ -30,16 +30,17 @@ export function RealtimeRecorder({
     const startTimeRef = useRef<number>(0);
     const tokensRef = useRef<{ input: number; output: number }>({ input: 0, output: 0 });
     const reservationRef = useRef<{ clientName?: string; date?: string; time?: string }>({});
+    const isRecordingRef = useRef(false);
 
     const updateAudioLevel = useCallback(() => {
-        if (analyserRef.current && isRecording) {
+        if (analyserRef.current && isRecordingRef.current) {
             const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
             analyserRef.current.getByteFrequencyData(dataArray);
             const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
             setAudioLevel(average / 255);
             animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
         }
-    }, [isRecording]);
+    }, []);
 
     useEffect(() => {
         return () => {
@@ -112,6 +113,7 @@ export function RealtimeRecorder({
             dc.onopen = () => {
                 setIsConnected(true);
                 setIsRecording(true);
+                isRecordingRef.current = true;
                 setIsProcessing(false);
                 animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
 
@@ -351,6 +353,7 @@ export function RealtimeRecorder({
         }
         setIsConnected(false);
         setIsRecording(false);
+        isRecordingRef.current = false;
         setAudioLevel(0);
     };
 
