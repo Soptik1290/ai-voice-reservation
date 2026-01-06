@@ -99,24 +99,32 @@ async function processWithOpenAI(audioBuffer: Buffer, model: string): Promise<Pr
 
     // Step 2: Extract reservation data using selected model
     console.log(`Using OpenAI model: ${model}`);
+    // GPT-5 Mini nepodporuje temperature parametr
+    const requestBody: Record<string, unknown> = {
+        model: model,
+        messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: transcription },
+        ],
+    };
+
+    // Přidej temperature pouze pro modely, které ho podporují
+    if (!model.includes("gpt-5")) {
+        requestBody.temperature = 0.1;
+    }
+
     const extractResponse = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
             "Authorization": `Bearer ${apiKey}`,
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-            model: model, // Use dynamic model
-            messages: [
-                { role: "system", content: SYSTEM_PROMPT },
-                { role: "user", content: transcription },
-            ],
-            temperature: 0.1,
-        }),
+        body: JSON.stringify(requestBody),
     });
 
     if (!extractResponse.ok) {
         const error = await extractResponse.text();
+        console.error(`OpenAI extraction failed for model ${model}:`, error);
         throw new Error(`OpenAI extraction failed: ${error}`);
     }
 
