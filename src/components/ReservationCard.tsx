@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Reservation, AIProvider } from "@/types";
+import { Reservation, AIProvider, UsageMetrics } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,9 +12,10 @@ interface ReservationCardProps {
     reservation: Partial<Reservation>;
     onSave: (reservation: Reservation) => void;
     provider: AIProvider;
+    metrics?: UsageMetrics;
 }
 
-export function ReservationCard({ reservation, onSave, provider }: ReservationCardProps) {
+export function ReservationCard({ reservation, onSave, provider, metrics }: ReservationCardProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [editedReservation, setEditedReservation] = useState<Partial<Reservation>>(reservation);
 
@@ -27,6 +28,7 @@ export function ReservationCard({ reservation, onSave, provider }: ReservationCa
             notes: editedReservation.notes,
             provider,
             createdAt: new Date().toISOString(),
+            metrics,
         };
         onSave(fullReservation);
     };

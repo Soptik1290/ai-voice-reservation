@@ -142,6 +142,7 @@ export default function Home() {
                             reservation={currentReservation}
                             onSave={handleSaveReservation}
                             provider={provider}
+                            metrics={metrics || undefined}
                         />
                     </div>
                 )}

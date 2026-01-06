@@ -3,7 +3,7 @@
 import { Reservation, AIProvider } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, User, Trash2, FileText } from "lucide-react";
+import { Calendar, Clock, User, Trash2, FileText, Timer, Hash, Coins } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ReservationListProps {
@@ -14,15 +14,15 @@ interface ReservationListProps {
 const getProviderStyle = (provider: AIProvider) => {
     switch (provider) {
         case "openai":
-            return { border: "border-l-emerald-500", badge: "bg-emerald-500/10 text-emerald-400", label: "OpenAI" };
+            return { border: "border-l-emerald-500", badge: "bg-emerald-500/10 text-emerald-400", label: "OpenAI", accent: "text-emerald-400" };
         case "openai-realtime":
-            return { border: "border-l-purple-500", badge: "bg-purple-500/10 text-purple-400", label: "OpenAI RT" };
+            return { border: "border-l-purple-500", badge: "bg-purple-500/10 text-purple-400", label: "OpenAI RT", accent: "text-purple-400" };
         case "gemini":
-            return { border: "border-l-blue-500", badge: "bg-blue-500/10 text-blue-400", label: "Gemini" };
+            return { border: "border-l-blue-500", badge: "bg-blue-500/10 text-blue-400", label: "Gemini", accent: "text-blue-400" };
         case "gemini-live":
-            return { border: "border-l-cyan-500", badge: "bg-cyan-500/10 text-cyan-400", label: "Gemini RT" };
+            return { border: "border-l-cyan-500", badge: "bg-cyan-500/10 text-cyan-400", label: "Gemini RT", accent: "text-cyan-400" };
         default:
-            return { border: "border-l-emerald-500", badge: "bg-emerald-500/10 text-emerald-400", label: "AI" };
+            return { border: "border-l-emerald-500", badge: "bg-emerald-500/10 text-emerald-400", label: "AI", accent: "text-emerald-400" };
     }
 };
 
@@ -40,6 +40,7 @@ export function ReservationList({ reservations, onDelete }: ReservationListProps
         <div className="space-y-3">
             {reservations.map((reservation) => {
                 const style = getProviderStyle(reservation.provider);
+                const metrics = reservation.metrics;
 
                 return (
                     <Card
@@ -50,15 +51,18 @@ export function ReservationList({ reservations, onDelete }: ReservationListProps
                         )}
                     >
                         <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1 space-y-2">
+                                    {/* Header row */}
+                                    <div className="flex items-center gap-2 flex-wrap">
                                         <User className="w-4 h-4 text-muted-foreground" />
                                         <span className="font-medium">{reservation.clientName}</span>
                                         <span className={cn("text-xs px-2 py-0.5 rounded-full", style.badge)}>
                                             {style.label}
                                         </span>
                                     </div>
+
+                                    {/* Date/Time row */}
                                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                         <span className="flex items-center gap-1">
                                             <Calendar className="w-3 h-3" />
@@ -71,16 +75,47 @@ export function ReservationList({ reservations, onDelete }: ReservationListProps
                                             </span>
                                         )}
                                     </div>
+
+                                    {/* Notes */}
                                     {reservation.notes && (
                                         <p className="text-sm text-muted-foreground italic">
                                             {reservation.notes}
                                         </p>
                                     )}
+
+                                    {/* Metrics row */}
+                                    {metrics && (
+                                        <div className={cn("flex items-center gap-4 text-xs pt-1 border-t border-border/50 mt-2", style.accent)}>
+                                            <span className="flex items-center gap-1">
+                                                <Timer className="w-3 h-3" />
+                                                {metrics.durationMs < 1000
+                                                    ? `${metrics.durationMs}ms`
+                                                    : `${(metrics.durationMs / 1000).toFixed(2)}s`
+                                                }
+                                            </span>
+                                            {metrics.tokensTotal !== undefined && metrics.tokensTotal > 0 && (
+                                                <span className="flex items-center gap-1">
+                                                    <Hash className="w-3 h-3" />
+                                                    {metrics.tokensTotal.toLocaleString()} tok
+                                                </span>
+                                            )}
+                                            {metrics.estimatedCostUsd !== undefined && metrics.estimatedCostUsd > 0 && (
+                                                <span className="flex items-center gap-1">
+                                                    <Coins className="w-3 h-3" />
+                                                    ${metrics.estimatedCostUsd < 0.001
+                                                        ? "<0.001"
+                                                        : metrics.estimatedCostUsd.toFixed(4)
+                                                    }
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
+
                                 <Button
                                     size="icon"
                                     variant="ghost"
-                                    className="text-muted-foreground hover:text-destructive"
+                                    className="text-muted-foreground hover:text-destructive shrink-0"
                                     onClick={() => onDelete(reservation.id)}
                                 >
                                     <Trash2 className="w-4 h-4" />

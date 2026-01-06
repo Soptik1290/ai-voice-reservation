@@ -1,3 +1,11 @@
+export interface UsageMetrics {
+    durationMs: number;
+    tokensInput?: number;
+    tokensOutput?: number;
+    tokensTotal?: number;
+    estimatedCostUsd?: number;
+}
+
 export interface Reservation {
     id: string;
     clientName: string;
@@ -6,17 +14,10 @@ export interface Reservation {
     notes?: string;
     provider: 'openai' | 'gemini' | 'openai-realtime' | 'gemini-live';
     createdAt: string;
+    metrics?: UsageMetrics;
 }
 
 export type AIProvider = 'openai' | 'gemini' | 'openai-realtime' | 'gemini-live';
-
-export interface UsageMetrics {
-    durationMs: number;
-    tokensInput?: number;
-    tokensOutput?: number;
-    tokensTotal?: number;
-    estimatedCostUsd?: number;
-}
 
 export interface TranscriptionResult {
     text: string;
