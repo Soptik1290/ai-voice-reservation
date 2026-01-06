@@ -30,6 +30,7 @@ export function GeminiLiveRecorder({
     const startTimeRef = useRef<number>(0);
     const tokensRef = useRef<{ input: number; output: number }>({ input: 0, output: 0 });
     const streamRef = useRef<MediaStream | null>(null);
+    const isCompleteRef = useRef(false);
 
     const updateAudioLevel = useCallback(() => {
         if (analyserRef.current && isRecording) {
@@ -51,6 +52,7 @@ export function GeminiLiveRecorder({
     }, []);
 
     const connect = async () => {
+        isCompleteRef.current = false;
         setIsProcessing(true);
         startTimeRef.current = performance.now();
         tokensRef.current = { input: 0, output: 0 };
@@ -111,6 +113,8 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
             };
 
             ws.onmessage = async (event) => {
+                if (isCompleteRef.current) return;
+
                 try {
                     let data;
                     if (event.data instanceof Blob) {
@@ -183,7 +187,7 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
             processorRef.current.connect(audioContextRef.current.destination);
 
             processorRef.current.onaudioprocess = (e) => {
-                if (ws.readyState === WebSocket.OPEN) {
+                if (ws.readyState === WebSocket.OPEN && !isCompleteRef.current) {
                     const inputData = e.inputBuffer.getChannelData(0);
                     // Convert float32 to int16
                     const int16Data = new Int16Array(inputData.length);
@@ -240,9 +244,9 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
 
         // Try multiple name patterns - use more inclusive regex for Czech names
         const namePatterns = [
-            /Jméno:\s*([\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+\s+[\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+)/i,  // "Jméno: Tomáš Stark"
-            /pro\s+([\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+\s+[\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+)/i,    // "pro Tomáše Starka"
-            /klient[a]?:\s*([\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+\s+[\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+)/i, // "klient: Tomáš Stark"
+            /Jméno:\s*([\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+\s+[\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+)/i,
+            /pro\s+([\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+\s+[\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+)/i,
+            /klient[a]?:\s*([\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+\s+[\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+)/i,
         ];
 
         let clientName: string | undefined;
@@ -257,10 +261,10 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
 
         // Try multiple date patterns
         const datePatterns = [
-            /Datum:\s*(\d{4}-\d{2}-\d{2})/i,  // "Datum: 2026-04-05"
-            /(\d{4}-\d{2}-\d{2})/,             // "2026-04-05"
-            /(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})?/,  // "5. 4. 2026" or "5.4."
-            /(\d{1,2})\.\s*(ledna|února|března|dubna|května|června|července|srpna|září|října|listopadu|prosince)/i, // "5. dubna"
+            /Datum:\s*(\d{4}-\d{2}-\d{2})/i,
+            /(\d{4}-\d{2}-\d{2})/,
+            /(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})?/,
+            /(\d{1,2})\.\s*(ledna|února|března|dubna|května|června|července|srpna|září|října|listopadu|prosince)/i,
         ];
 
         let date = "";
@@ -274,16 +278,13 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
             const match = text.match(pattern);
             if (match) {
                 if (match[0].includes('-') && match[0].length === 10) {
-                    // ISO format: 2026-04-05
                     date = match[1] || match[0];
                 } else if (match[2] && monthNames[match[2].toLowerCase()]) {
-                    // Czech month name: "5. dubna"
                     const day = match[1].padStart(2, '0');
                     const month = monthNames[match[2].toLowerCase()];
                     const year = new Date().getFullYear();
                     date = `${year}-${month}-${day}`;
                 } else if (match[1] && match[2]) {
-                    // Numeric format: "5.4." or "5.4.2026"
                     const day = match[1].padStart(2, '0');
                     const month = match[2].padStart(2, '0');
                     const year = match[3] || new Date().getFullYear();
@@ -293,7 +294,6 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
             }
         }
 
-        // Time pattern
         const timeMatch = text.match(/(?:Čas:|v|ve)\s*(\d{1,2})[:\.](\d{2})|(\d{1,2})[:\.](\d{2})\s*(?:hodin)?/i);
         let time: string | undefined;
         if (timeMatch) {
@@ -303,7 +303,10 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
         }
 
         // Only trigger when we have BOTH name AND date (complete reservation)
-        if (clientName && date) {
+        if (clientName && date && !isCompleteRef.current) {
+            console.log("Reservation complete, disconnecting...");
+            isCompleteRef.current = true;
+
             const endTime = performance.now();
             const metrics: UsageMetrics = {
                 durationMs: Math.round(endTime - startTimeRef.current),
@@ -325,12 +328,12 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
                 metrics,
             });
 
-            // Auto-disconnect after successful extraction
             disconnect();
         }
     };
 
     const disconnect = () => {
+        console.log("Disconnecting Gemini Live...");
         if (animationFrameRef.current) {
             cancelAnimationFrame(animationFrameRef.current);
         }
