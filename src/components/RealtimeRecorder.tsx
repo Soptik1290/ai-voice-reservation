@@ -455,16 +455,26 @@ Pokud nějaký údaj chybí, vynech ho.`,
 
             {/* Audio Level Visualization */}
             {isRecording && (
-                <div className="flex items-center gap-1">
-                    {[...Array(20)].map((_, i) => (
-                        <div
-                            key={i}
-                            className="w-1 rounded-full bg-gradient-to-t from-purple-500 to-pink-400 transition-all duration-75"
-                            style={{
-                                height: `${Math.random() * audioLevel * 40 + 4}px`,
-                            }}
-                        />
-                    ))}
+                <div className="flex items-end justify-center gap-1 h-16">
+                    {[...Array(24)].map((_, i) => {
+                        // Create wave-like effect based on position and audio level
+                        const centerDistance = Math.abs(i - 11.5) / 12;
+                        const waveHeight = Math.sin((i / 4) + Date.now() / 200) * 0.3;
+                        const baseHeight = 8;
+                        const dynamicHeight = audioLevel * 60 * (1 - centerDistance * 0.5) + waveHeight * 10;
+                        const height = Math.max(baseHeight, baseHeight + dynamicHeight);
+
+                        return (
+                            <div
+                                key={i}
+                                className="w-1.5 rounded-full bg-gradient-to-t from-purple-600 via-pink-500 to-purple-400 transition-all duration-100"
+                                style={{
+                                    height: `${height}px`,
+                                    opacity: 0.7 + audioLevel * 0.3,
+                                }}
+                            />
+                        );
+                    })}
                 </div>
             )}
         </div>
