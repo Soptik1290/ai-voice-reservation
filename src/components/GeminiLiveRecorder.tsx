@@ -299,7 +299,8 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
             time = `${hours}:${minutes}`;
         }
 
-        if (clientName || date) {
+        // Only trigger when we have BOTH name AND date (complete reservation)
+        if (clientName && date) {
             const endTime = performance.now();
             const metrics: UsageMetrics = {
                 durationMs: Math.round(endTime - startTimeRef.current),
