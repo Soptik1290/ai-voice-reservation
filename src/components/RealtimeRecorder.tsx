@@ -29,6 +29,7 @@ export function RealtimeRecorder({
     const animationFrameRef = useRef<number | null>(null);
     const startTimeRef = useRef<number>(0);
     const tokensRef = useRef<{ input: number; output: number }>({ input: 0, output: 0 });
+    const reservationRef = useRef<{ clientName?: string; date?: string; time?: string }>({});
 
     const updateAudioLevel = useCallback(() => {
         if (analyserRef.current && isRecording) {
@@ -53,6 +54,7 @@ export function RealtimeRecorder({
         setIsProcessing(true);
         startTimeRef.current = performance.now();
         tokensRef.current = { input: 0, output: 0 };
+        reservationRef.current = {};
         setLiveTranscript("");
 
         try {
@@ -166,6 +168,8 @@ export function RealtimeRecorder({
             case "conversation.item.input_audio_transcription.completed":
                 // User's speech transcribed
                 setLiveTranscript(prev => prev + (prev ? " " : "") + event.transcript);
+                // Also try to extract reservation data from live transcript
+                extractFromTranscript(event.transcript);
                 break;
 
             case "response.audio_transcript.delta":
@@ -195,74 +199,80 @@ export function RealtimeRecorder({
         }
     };
 
-    const parseReservation = (text: string) => {
-        // Try to extract reservation data from AI response
-        // Match declined Czech names like "pro Tomáše Starka" or "pro Jana Nováka"
-        const namePatterns = [
-            /pro\s+([\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+\s+[\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+)/i,
-            /Jméno:\s*([\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+\s+[\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+)/i,
-            /klient[a]?:\s*([\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+\s+[\wěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ]+)/i,
-        ];
+    // Extract data directly from user's transcript (before AI processing)
+    const extractFromTranscript = (text: string) => {
+        console.log("Extracting from transcript:", text);
 
-        let clientName: string | undefined;
-        for (const pattern of namePatterns) {
-            const match = text.match(pattern);
-            if (match) {
-                clientName = match[1];
-                break;
+        // Simple name extraction: look for "pro [Name]" pattern using \S+ for any non-whitespace
+        const nameMatch = text.match(/pro\s+(\S+)\s+(\S+)/i);
+        if (nameMatch) {
+            const potentialName = `${nameMatch[1]} ${nameMatch[2]}`;
+            // Filter out common words that aren't names
+            const skipWords = ['na', 'v', 've', 'dne', 'den', 'hodin', 'hodinu'];
+            if (!skipWords.includes(nameMatch[2].toLowerCase())) {
+                reservationRef.current.clientName = potentialName;
+                console.log("Extracted name from transcript:", potentialName);
             }
         }
 
-        // Date patterns - be careful not to match time as date
-        const datePatterns = [
-            /(\d{4}-\d{2}-\d{2})/,  // ISO format
-            /na\s+(\d{1,2})\.\s*(ledna|února|března|dubna|května|června|července|srpna|září|října|listopadu|prosince)/i, // "na 8. dubna"
-            /(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})/,  // "8.4.2026"
-        ];
-
-        let date = "";
+        // Extract date
         const monthNames: Record<string, string> = {
             'ledna': '01', 'února': '02', 'března': '03', 'dubna': '04',
             'května': '05', 'června': '06', 'července': '07', 'srpna': '08',
             'září': '09', 'října': '10', 'listopadu': '11', 'prosince': '12'
         };
 
-        for (const pattern of datePatterns) {
-            const match = text.match(pattern);
-            if (match) {
-                if (match[0].includes('-') && match[0].length === 10) {
-                    date = match[1];
-                } else if (match[2] && monthNames[match[2].toLowerCase()]) {
-                    // Czech month name: "8. dubna"
-                    const day = match[1].padStart(2, '0');
-                    const month = monthNames[match[2].toLowerCase()];
-                    const year = new Date().getFullYear();
-                    date = `${year}-${month}-${day}`;
-                } else if (match[1] && match[2] && match[3]) {
-                    // Numeric format: "8.4.2026"
-                    const day = match[1].padStart(2, '0');
-                    const month = match[2].padStart(2, '0');
-                    date = `${match[3]}-${month}-${day}`;
-                }
-                if (date) break;
+        const dateMatch = text.match(/(\d{1,2})\.\s*(ledna|února|března|dubna|května|června|července|srpna|září|října|listopadu|prosince)/i);
+        if (dateMatch && monthNames[dateMatch[2].toLowerCase()]) {
+            const day = dateMatch[1].padStart(2, '0');
+            const month = monthNames[dateMatch[2].toLowerCase()];
+            const year = new Date().getFullYear();
+            reservationRef.current.date = `${year}-${month}-${day}`;
+            console.log("Extracted date from transcript:", reservationRef.current.date);
+        }
+
+        // Extract time
+        const timeMatch = text.match(/v?\s*(\d{1,2})\s*hodin/i);
+        if (timeMatch) {
+            reservationRef.current.time = `${timeMatch[1].padStart(2, '0')}:00`;
+            console.log("Extracted time from transcript:", reservationRef.current.time);
+        }
+        const timeMatchFull = text.match(/(\d{1,2})[:\.](\d{2})/);
+        if (timeMatchFull) {
+            reservationRef.current.time = `${timeMatchFull[1].padStart(2, '0')}:${timeMatchFull[2]}`;
+        }
+    };
+
+    const parseReservation = (text: string) => {
+        console.log("Parsing AI response:", text);
+
+        // Use data already extracted from transcript, or try to extract from AI response
+        let clientName = reservationRef.current.clientName;
+        let date = reservationRef.current.date;
+        let time = reservationRef.current.time;
+
+        // Try additional patterns from AI response if data is missing
+        if (!clientName) {
+            const nameMatch = text.match(/pro\s+(\S+)\s+(\S+)/i);
+            if (nameMatch) {
+                clientName = `${nameMatch[1]} ${nameMatch[2]}`;
             }
         }
 
-        // Time patterns - handle "v 18 hodin", "v 18:00", "18:30"
-        const timePatterns = [
-            /v\s+(\d{1,2})\s*hodin/i,                    // "v 18 hodin" -> 18:00
-            /ve?\s+(\d{1,2})[:\.](\d{2})/i,              // "v 18:30" or "ve 14.00"
-            /(\d{1,2})[:\.](\d{2})\s*hodin/i,            // "18:30 hodin"
-        ];
+        if (!date) {
+            const isoMatch = text.match(/(\d{4}-\d{2}-\d{2})/);
+            const numericMatch = text.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+            if (isoMatch) {
+                date = isoMatch[1];
+            } else if (numericMatch) {
+                date = `${numericMatch[3]}-${numericMatch[2].padStart(2, '0')}-${numericMatch[1].padStart(2, '0')}`;
+            }
+        }
 
-        let time: string | undefined;
-        for (const pattern of timePatterns) {
-            const match = text.match(pattern);
-            if (match) {
-                const hours = match[1].padStart(2, '0');
-                const minutes = match[2] ? match[2] : '00';  // Default to :00 if no minutes
-                time = `${hours}:${minutes}`;
-                break;
+        if (!time) {
+            const timeMatch = text.match(/v\s+(\d{1,2})[:\.]?(\d{2})?/i);
+            if (timeMatch) {
+                time = `${timeMatch[1].padStart(2, '0')}:${timeMatch[2] || '00'}`;
             }
         }
 
@@ -274,9 +284,9 @@ export function RealtimeRecorder({
                 tokensInput: tokensRef.current.input,
                 tokensOutput: tokensRef.current.output,
                 tokensTotal: tokensRef.current.input + tokensRef.current.output,
-                // Only charge for audio input (user speaking), not full connection time
-                // Estimate ~50% of time is actual speech
-                estimatedCostUsd: (durationMs / 60000) * PRICING.openai.realtime.audioInputPerMinute * 0.5,
+                // Estimate cost: base connection fee + audio minutes
+                // OpenAI charges ~$0.06/min for audio input
+                estimatedCostUsd: (durationMs / 60000) * PRICING.openai.realtime.audioInputPerMinute,
             };
 
             onTranscription({
@@ -334,13 +344,13 @@ Pokud nějaký údaj chybí, vynech ho.`,
                 tokensInput: tokensRef.current.input,
                 tokensOutput: tokensRef.current.output,
                 tokensTotal: tokensRef.current.input + tokensRef.current.output,
-                // Only charge for audio input (user speaking), estimate ~50% of time
-                estimatedCostUsd: (durationMs / 60000) * PRICING.openai.realtime.audioInputPerMinute * 0.5,
+                estimatedCostUsd: (durationMs / 60000) * PRICING.openai.realtime.audioInputPerMinute,
             };
 
             if (liveTranscript) {
                 onTranscription({
                     text: liveTranscript,
+                    reservation: reservationRef.current,  // Use extracted data
                     metrics,
                 });
             }
