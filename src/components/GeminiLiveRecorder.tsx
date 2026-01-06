@@ -236,23 +236,70 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
     };
 
     const parseReservation = (text: string) => {
-        const nameMatch = text.match(/pro\s+([A-ZÁ-Ža-zá-ž]+\s+[A-ZÁ-Ža-zá-ž]+)/i);
-        const dateMatch = text.match(/(\d{1,2})\.?\s*(\d{1,2})\.?\s*(\d{4})?|(\d{4}-\d{2}-\d{2})/);
-        const timeMatch = text.match(/v?\s*(\d{1,2})[:\.](\d{2})/);
+        // Try multiple name patterns
+        const namePatterns = [
+            /Jméno:\s*([A-ZÁ-Ža-zá-ž]+\s+[A-ZÁ-Ža-zá-ž]+)/i,  // "Jméno: Tomáš Stark"
+            /pro\s+([A-ZÁ-Ža-zá-ž]+\s+[A-ZÁ-Ža-zá-ž]+)/i,    // "pro Tomáše Starka"
+            /klient[a]?:\s*([A-ZÁ-Ža-zá-ž]+\s+[A-ZÁ-Ža-zá-ž]+)/i, // "klient: Tomáš Stark"
+        ];
 
-        if (nameMatch || dateMatch) {
-            let date = "";
-            if (dateMatch) {
-                if (dateMatch[4]) {
-                    date = dateMatch[4];
-                } else {
-                    const day = dateMatch[1].padStart(2, "0");
-                    const month = dateMatch[2].padStart(2, "0");
-                    const year = dateMatch[3] || new Date().getFullYear();
+        let clientName: string | undefined;
+        for (const pattern of namePatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                clientName = match[1];
+                break;
+            }
+        }
+
+        // Try multiple date patterns
+        const datePatterns = [
+            /Datum:\s*(\d{4}-\d{2}-\d{2})/i,  // "Datum: 2026-04-05"
+            /(\d{4}-\d{2}-\d{2})/,             // "2026-04-05"
+            /(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})?/,  // "5. 4. 2026" or "5.4."
+            /(\d{1,2})\.\s*(ledna|února|března|dubna|května|června|července|srpna|září|října|listopadu|prosince)/i, // "5. dubna"
+        ];
+
+        let date = "";
+        const monthNames: Record<string, string> = {
+            'ledna': '01', 'února': '02', 'března': '03', 'dubna': '04',
+            'května': '05', 'června': '06', 'července': '07', 'srpna': '08',
+            'září': '09', 'října': '10', 'listopadu': '11', 'prosince': '12'
+        };
+
+        for (const pattern of datePatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                if (match[0].includes('-') && match[0].length === 10) {
+                    // ISO format: 2026-04-05
+                    date = match[1] || match[0];
+                } else if (match[2] && monthNames[match[2].toLowerCase()]) {
+                    // Czech month name: "5. dubna"
+                    const day = match[1].padStart(2, '0');
+                    const month = monthNames[match[2].toLowerCase()];
+                    const year = new Date().getFullYear();
+                    date = `${year}-${month}-${day}`;
+                } else if (match[1] && match[2]) {
+                    // Numeric format: "5.4." or "5.4.2026"
+                    const day = match[1].padStart(2, '0');
+                    const month = match[2].padStart(2, '0');
+                    const year = match[3] || new Date().getFullYear();
                     date = `${year}-${month}-${day}`;
                 }
+                if (date) break;
             }
+        }
 
+        // Time pattern
+        const timeMatch = text.match(/(?:Čas:|v|ve)\s*(\d{1,2})[:\.](\d{2})|(\d{1,2})[:\.](\d{2})\s*(?:hodin)?/i);
+        let time: string | undefined;
+        if (timeMatch) {
+            const hours = (timeMatch[1] || timeMatch[3]).padStart(2, '0');
+            const minutes = timeMatch[2] || timeMatch[4];
+            time = `${hours}:${minutes}`;
+        }
+
+        if (clientName || date) {
             const endTime = performance.now();
             const metrics: UsageMetrics = {
                 durationMs: Math.round(endTime - startTimeRef.current),
@@ -267,9 +314,9 @@ Dnešní datum je ${new Date().toISOString().split("T")[0]}.`
             onTranscription({
                 text: liveTranscript || text,
                 reservation: {
-                    clientName: nameMatch ? nameMatch[1] : undefined,
+                    clientName,
                     date: date || undefined,
-                    time: timeMatch ? `${timeMatch[1].padStart(2, "0")}:${timeMatch[2]}` : undefined,
+                    time,
                 },
                 metrics,
             });
