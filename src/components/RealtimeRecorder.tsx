@@ -199,6 +199,37 @@ export function RealtimeRecorder({
         }
     };
 
+    // Normalize Czech name from declined form (genitive) to nominative
+    const normalizeCzechName = (firstName: string, lastName: string): string => {
+        const normalizeWord = (word: string): string => {
+            const lower = word.toLowerCase();
+
+            // Common patterns: genitive -> nominative
+            // Tomáše -> Tomáš (ends in -še, -če, -ře, -ně)
+            if (lower.endsWith('še') || lower.endsWith('če') || lower.endsWith('ře') || lower.endsWith('ně')) {
+                return word.slice(0, -1);
+            }
+            // Pavla -> Pavel
+            if (lower.endsWith('vla')) {
+                return word.slice(0, -2) + 'el';
+            }
+            // Generic: remove trailing -a for masculine names (Starka -> Stark, Nováka -> Novák)
+            // But keep feminine names that naturally end in -a
+            const feminineNames = ['anna', 'eva', 'marie', 'lucie', 'tereza', 'kateřina', 'martina', 'petra', 'jana'];
+            if (lower.endsWith('a') && !feminineNames.includes(lower)) {
+                return word.slice(0, -1);
+            }
+
+            return word;
+        };
+
+        const normalizedFirst = normalizeWord(firstName);
+        const normalizedLast = normalizeWord(lastName);
+
+        console.log(`Normalized: ${firstName} ${lastName} -> ${normalizedFirst} ${normalizedLast}`);
+        return `${normalizedFirst} ${normalizedLast}`;
+    };
+
     // Extract data directly from user's transcript (before AI processing)
     const extractFromTranscript = (text: string) => {
         console.log("Extracting from transcript:", text);
@@ -206,12 +237,13 @@ export function RealtimeRecorder({
         // Simple name extraction: look for "pro [Name]" pattern using \S+ for any non-whitespace
         const nameMatch = text.match(/pro\s+(\S+)\s+(\S+)/i);
         if (nameMatch) {
-            const potentialName = `${nameMatch[1]} ${nameMatch[2]}`;
             // Filter out common words that aren't names
             const skipWords = ['na', 'v', 've', 'dne', 'den', 'hodin', 'hodinu'];
             if (!skipWords.includes(nameMatch[2].toLowerCase())) {
-                reservationRef.current.clientName = potentialName;
-                console.log("Extracted name from transcript:", potentialName);
+                // Normalize the name from genitive to nominative
+                const normalizedName = normalizeCzechName(nameMatch[1], nameMatch[2]);
+                reservationRef.current.clientName = normalizedName;
+                console.log("Extracted and normalized name:", normalizedName);
             }
         }
 
