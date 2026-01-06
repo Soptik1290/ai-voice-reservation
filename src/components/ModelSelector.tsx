@@ -122,7 +122,6 @@ export function ModelSelector({ provider, selectedModel, onModelChange }: ModelS
 
                                 <div className="flex-1 text-left">
                                     <div className="text-sm font-medium text-foreground">{model.name}</div>
-                                    <div className="text-xs text-muted-foreground">{model.description}</div>
                                 </div>
 
                                 <div className="text-right">

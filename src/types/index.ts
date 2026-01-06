@@ -28,7 +28,6 @@ export interface ModelInfo {
     name: string;
     inputPrice: number;  // per 1M tokens
     outputPrice: number; // per 1M tokens
-    description: string;
 }
 
 export const OPENAI_MODELS: Record<OpenAIModel, ModelInfo> = {
@@ -36,22 +35,19 @@ export const OPENAI_MODELS: Record<OpenAIModel, ModelInfo> = {
         id: 'gpt-4o-mini',
         name: 'GPT-4o Mini',
         inputPrice: 0.15,
-        outputPrice: 0.60,
-        description: 'Rychlý a levný model'
+        outputPrice: 0.60
     },
     'gpt-5-mini': {
         id: 'gpt-5-mini',
         name: 'GPT-5 Mini',
         inputPrice: 0.50,
-        outputPrice: 1.50,
-        description: 'Novější, chytřejší'
+        outputPrice: 1.50
     },
     'gpt-5-nano': {
         id: 'gpt-5-nano',
         name: 'GPT-5 Nano',
         inputPrice: 0.10,
-        outputPrice: 0.40,
-        description: 'Ultra levný, rychlý'
+        outputPrice: 0.40
     }
 };
 
@@ -60,22 +56,19 @@ export const GEMINI_MODELS: Record<GeminiModel, ModelInfo> = {
         id: 'gemini-2.0-flash',
         name: 'Gemini 2.0 Flash',
         inputPrice: 0.075,
-        outputPrice: 0.30,
-        description: 'Aktuální stabilní verze'
+        outputPrice: 0.30
     },
     'gemini-2.5-flash': {
         id: 'gemini-2.5-flash',
         name: 'Gemini 2.5 Flash',
         inputPrice: 0.15,
-        outputPrice: 0.60,
-        description: 'Vylepšené reasoning'
+        outputPrice: 0.60
     },
     'gemini-3.0-flash': {
         id: 'gemini-3.0-flash',
         name: 'Gemini 3.0 Flash',
         inputPrice: 0.25,
-        outputPrice: 1.00,
-        description: 'Nejnovější generace'
+        outputPrice: 1.00
     }
 };
 
