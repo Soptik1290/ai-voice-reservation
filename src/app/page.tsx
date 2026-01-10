@@ -104,36 +104,67 @@ export default function Home() {
     const isLiveProvider = provider === "openai-realtime" || provider === "gemini-live";
 
     return (
-        <main className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
-            {/* Decorative background elements */}
+        <main className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/30 overflow-x-hidden">
+            {/* Enhanced decorative background elements */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse" />
-                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+                {/* Primary gradient orb */}
+                <div
+                    className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full blur-[120px] animate-float"
+                    style={{
+                        background: 'radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%)',
+                    }}
+                />
+                {/* Secondary gradient orb */}
+                <div
+                    className="absolute bottom-1/4 right-1/4 w-[450px] h-[450px] rounded-full blur-[100px] animate-float"
+                    style={{
+                        background: 'radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, transparent 70%)',
+                        animationDelay: '1.5s'
+                    }}
+                />
+                {/* Accent orb */}
+                <div
+                    className="absolute top-3/4 left-1/2 w-[300px] h-[300px] rounded-full blur-[80px] animate-float"
+                    style={{
+                        background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)',
+                        animationDelay: '2.5s'
+                    }}
+                />
+                {/* Grid overlay */}
+                <div
+                    className="absolute inset-0 opacity-[0.02]"
+                    style={{
+                        backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
+                        backgroundSize: '60px 60px'
+                    }}
+                />
             </div>
 
-            <div className="relative max-w-4xl mx-auto px-4 py-12">
+            <div className="relative max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
                 {/* Header */}
-                <header className="text-center mb-12">
-                    <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-secondary/50 border border-border/50 backdrop-blur-sm">
-                        <Sparkles className="w-4 h-4 text-primary" />
-                        <span className="text-sm text-muted-foreground">AI Voice Comparison</span>
+                <header className="text-center mb-14">
+                    <div className="inline-flex items-center gap-2.5 mb-6 px-5 py-2.5 rounded-full glass border border-primary/20 shadow-lg shadow-primary/5">
+                        <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                        <span className="text-sm font-medium bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">AI Voice Comparison</span>
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent mb-4">
-                        Hlasové rezervace
+                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-5">
+                        <span className="bg-gradient-to-r from-white via-white to-muted-foreground/80 bg-clip-text text-transparent">
+                            Hlasové rezervace
+                        </span>
                     </h1>
-                    <p className="text-muted-foreground max-w-xl mx-auto">
+                    <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
                         Porovnejte 4 AI modely: OpenAI, OpenAI Realtime, Gemini a Gemini Live.
                         Nahrajte hlasový příkaz a sledujte výsledky.
                     </p>
                 </header>
 
                 {/* Provider Switch */}
-                <div className="flex justify-center mb-8">
+                <div className="flex justify-center mb-10">
                     <ProviderSwitch provider={provider} onProviderChange={setProvider} />
                 </div>
 
-                {/* Model Selector (also available when using live providers to pick live audio models) */}
-                <div className="flex justify-center mb-8">
+                {/* Model Selector */}
+                <div className="flex justify-center mb-10">
                     <ModelSelector
                         provider={provider === "openai" || provider === "openai-realtime" ? "openai" : "gemini"}
                         selectedModel={selectedModel}
@@ -142,8 +173,8 @@ export default function Home() {
                     />
                 </div>
 
-                {/* Voice Recorder - different component based on provider */}
-                <div className="flex justify-center mb-12">
+                {/* Voice Recorder */}
+                <div className="flex justify-center mb-14">
                     {renderRecorder()}
                 </div>
 
@@ -156,9 +187,9 @@ export default function Home() {
 
                 {/* Transcription Display (only for non-live providers) */}
                 {transcription && !isLiveProvider && (
-                    <div className="mb-8 p-4 rounded-xl bg-secondary/30 border border-border/50 backdrop-blur-sm">
-                        <p className="text-sm text-muted-foreground mb-1">Rozpoznaný text:</p>
-                        <p className="text-foreground italic">&ldquo;{transcription}&rdquo;</p>
+                    <div className="mb-10 p-5 rounded-2xl glass-card border border-white/10 shadow-xl">
+                        <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2 font-medium">Rozpoznaný text</p>
+                        <p className="text-foreground text-lg leading-relaxed">&ldquo;{transcription}&rdquo;</p>
                     </div>
                 )}
 
@@ -177,14 +208,14 @@ export default function Home() {
 
                 {/* Saved Reservations */}
                 <section>
-                    <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        Uložené rezervace
+                    <div className="flex items-center gap-3 mb-6">
+                        <h2 className="text-xl font-semibold tracking-tight">Uložené rezervace</h2>
                         {savedReservations.length > 0 && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
+                            <span className="text-xs px-2.5 py-1 rounded-full bg-gradient-to-r from-primary/20 to-purple-500/20 text-primary font-medium border border-primary/20">
                                 {savedReservations.length}
                             </span>
                         )}
-                    </h2>
+                    </div>
                     <ReservationList
                         reservations={savedReservations}
                         onDelete={handleDeleteReservation}

@@ -29,15 +29,18 @@ const getProviderStyle = (provider: AIProvider) => {
 export function ReservationList({ reservations, onDelete }: ReservationListProps) {
     if (reservations.length === 0) {
         return (
-            <div className="text-center py-12 text-muted-foreground">
-                <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Zatím žádné uložené rezervace</p>
+            <div className="text-center py-16 rounded-2xl glass-card border border-white/10">
+                <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
+                    <FileText className="w-8 h-8 text-primary/60" />
+                </div>
+                <p className="text-muted-foreground font-medium">Zatím žádné uložené rezervace</p>
+                <p className="text-sm text-muted-foreground/60 mt-1">Nahrajte hlasový příkaz pro vytvoření rezervace</p>
             </div>
         );
     }
 
     return (
-        <div className="space-y-3">
+        <div className="space-y-4">
             {reservations.map((reservation) => {
                 const style = getProviderStyle(reservation.provider);
                 const metrics = reservation.metrics;
@@ -46,7 +49,7 @@ export function ReservationList({ reservations, onDelete }: ReservationListProps
                     <Card
                         key={reservation.id}
                         className={cn(
-                            "transition-all duration-200 hover:shadow-md border-l-4",
+                            "transition-all duration-300 hover:shadow-xl hover:scale-[1.01] border-l-4 glass-card border-r border-t border-b border-white/10",
                             style.border
                         )}
                     >

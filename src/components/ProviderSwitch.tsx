@@ -11,18 +11,18 @@ interface ProviderSwitchProps {
 
 export function ProviderSwitch({ provider, onProviderChange }: ProviderSwitchProps) {
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4 p-4 rounded-2xl glass-card border border-white/10 shadow-xl">
             {/* OpenAI Group */}
-            <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground w-16 text-right">OpenAI</span>
-                <div className="flex items-center gap-1 p-1 rounded-lg bg-secondary/50 backdrop-blur-sm border border-border/50">
+            <div className="flex items-center gap-3">
+                <span className="text-xs font-semibold text-emerald-400/80 w-16 text-right tracking-wide">OpenAI</span>
+                <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-black/20 border border-white/5">
                     <button
                         onClick={() => onProviderChange("openai")}
                         className={cn(
-                            "px-4 py-2 rounded-md font-medium text-sm transition-all duration-300",
+                            "px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300",
                             provider === "openai"
-                                ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25"
-                                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                                ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30 scale-[1.02]"
+                                : "text-muted-foreground hover:text-foreground hover:bg-white/5"
                         )}
                     >
                         <span className="flex items-center gap-2">
@@ -35,32 +35,35 @@ export function ProviderSwitch({ provider, onProviderChange }: ProviderSwitchPro
                     <button
                         onClick={() => onProviderChange("openai-realtime")}
                         className={cn(
-                            "px-4 py-2 rounded-md font-medium text-sm transition-all duration-300",
+                            "px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300",
                             provider === "openai-realtime"
-                                ? "bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-lg shadow-purple-500/25"
-                                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                                ? "bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-lg shadow-purple-500/30 scale-[1.02]"
+                                : "text-muted-foreground hover:text-foreground hover:bg-white/5"
                         )}
                     >
                         <span className="flex items-center gap-2">
                             <Zap className="w-4 h-4" />
                             Realtime
-                            <span className="text-[9px] px-1 py-0.5 rounded bg-purple-400/30 font-normal">LIVE</span>
+                            <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-white/20 font-semibold tracking-wide">LIVE</span>
                         </span>
                     </button>
                 </div>
             </div>
 
+            {/* Separator */}
+            <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
             {/* Gemini Group */}
-            <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground w-16 text-right">Gemini</span>
-                <div className="flex items-center gap-1 p-1 rounded-lg bg-secondary/50 backdrop-blur-sm border border-border/50">
+            <div className="flex items-center gap-3">
+                <span className="text-xs font-semibold text-blue-400/80 w-16 text-right tracking-wide">Gemini</span>
+                <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-black/20 border border-white/5">
                     <button
                         onClick={() => onProviderChange("gemini")}
                         className={cn(
-                            "px-4 py-2 rounded-md font-medium text-sm transition-all duration-300",
+                            "px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300",
                             provider === "gemini"
-                                ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/25"
-                                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                                ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/30 scale-[1.02]"
+                                : "text-muted-foreground hover:text-foreground hover:bg-white/5"
                         )}
                     >
                         <span className="flex items-center gap-2">
@@ -73,16 +76,16 @@ export function ProviderSwitch({ provider, onProviderChange }: ProviderSwitchPro
                     <button
                         onClick={() => onProviderChange("gemini-live")}
                         className={cn(
-                            "px-4 py-2 rounded-md font-medium text-sm transition-all duration-300",
+                            "px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-300",
                             provider === "gemini-live"
-                                ? "bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-lg shadow-cyan-500/25"
-                                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                                ? "bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-lg shadow-cyan-500/30 scale-[1.02]"
+                                : "text-muted-foreground hover:text-foreground hover:bg-white/5"
                         )}
                     >
                         <span className="flex items-center gap-2">
                             <Radio className="w-4 h-4" />
                             Realtime
-                            <span className="text-[9px] px-1 py-0.5 rounded bg-cyan-400/30 font-normal">LIVE</span>
+                            <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-white/20 font-semibold tracking-wide">LIVE</span>
                         </span>
                     </button>
                 </div>
