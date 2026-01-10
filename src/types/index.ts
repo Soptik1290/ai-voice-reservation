@@ -24,7 +24,7 @@ export type OpenAIModel = 'gpt-4o-mini' | 'gpt-5-mini';
 export type GeminiModel = 'gemini-2.0-flash' | 'gemini-2.5-flash';
 
 // Live / preview models are separated so they don't appear in the standard selector
-export type OpenAILiveModel = 'gpt-4o-mini-realtime-preview';
+export type OpenAILiveModel = 'gpt-4o-realtime-preview' | 'gpt-4o-mini-realtime-preview';
 export type GeminiLiveModel = 'gemini-2.5-flash-native-audio-preview-12-2025';
 
 export interface ModelInfo {
@@ -65,6 +65,12 @@ export const GEMINI_MODELS: Record<GeminiModel, ModelInfo> = {
 };
 
 export const OPENAI_LIVE_MODELS: Record<OpenAILiveModel, ModelInfo> = {
+    'gpt-4o-realtime-preview': {
+        id: 'gpt-4o-realtime-preview',
+        name: 'GPT-4o Realtime Preview',
+        inputPrice: 5.00,
+        outputPrice: 20.00
+    },
     'gpt-4o-mini-realtime-preview': {
         id: 'gpt-4o-mini-realtime-preview',
         name: 'GPT-4o Mini Realtime Preview',
