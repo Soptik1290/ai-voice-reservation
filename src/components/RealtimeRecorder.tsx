@@ -129,7 +129,15 @@ export function RealtimeRecorder({
                             model: "whisper-1",
                             language: "cs"  // Force Czech language
                         },
-                        instructions: "Uživatel mluví česky. Vždy přepisuj v češtině. Extrahuj rezervační data: jméno, datum, čas."
+                        instructions: `Jsi česky mluvící asistent pro rezervace. 
+Tvým úkolem je:
+1. Mluvit pouze česky.
+2. Přesně přepisovat data.
+3. Extrahovat: jméno klienta, datum (YYYY-MM-DD), čas (HH:MM).
+ Důležité:
+- Česká jména skloňuj do 1. pádu (nominativ).
+- Datum formátuj ISO 8601.
+- Uživatel mluví česky.`
                     }
                 }));
             };
