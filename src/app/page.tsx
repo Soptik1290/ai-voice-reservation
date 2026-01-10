@@ -30,7 +30,7 @@ export default function Home() {
         } else if (provider === "gemini") {
             setSelectedModel("gemini-2.0-flash");
         } else if (provider === "gemini-live") {
-            setSelectedModel("gemini-2.5-flash-native-audio-preview");
+            setSelectedModel("gemini-2.5-flash-native-audio-preview-12-2025");
         }
     }, [provider]);
 
