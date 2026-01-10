@@ -68,8 +68,8 @@ export const OPENAI_LIVE_MODELS: Record<OpenAILiveModel, ModelInfo> = {
     'gpt-4o-mini-realtime-preview': {
         id: 'gpt-4o-mini-realtime-preview',
         name: 'GPT-4o Mini Realtime Preview',
-        inputPrice: 0.10,
-        outputPrice: 0.40
+        inputPrice: 0.60,
+        outputPrice: 2.40
     }
 };
 
@@ -77,8 +77,8 @@ export const GEMINI_LIVE_MODELS: Record<GeminiLiveModel, ModelInfo> = {
     'gemini-2.5-flash-native-audio-preview': {
         id: 'gemini-2.5-flash-native-audio-preview',
         name: 'Gemini 2.5 Flash Native Audio Preview',
-        inputPrice: 0.20,
-        outputPrice: 0.80
+        inputPrice: 0.50,
+        outputPrice: 2.00
     }
 };
 
@@ -108,10 +108,10 @@ export const PRICING = {
             output: 0.30,  // per 1M tokens
         },
         live: {
-            audioInput: 0.70,   // per 1M audio tokens
-            audioOutput: 2.80,  // per 1M audio tokens
-            textInput: 0.15,    // per 1M text tokens
-            textOutput: 0.60,   // per 1M text tokens
+            audioInput: 3.00,   // per 1M audio tokens
+            audioOutput: 12.00, // per 1M audio tokens
+            textInput: 0.50,    // per 1M text tokens
+            textOutput: 2.00,   // per 1M text tokens
         }
     }
 };
