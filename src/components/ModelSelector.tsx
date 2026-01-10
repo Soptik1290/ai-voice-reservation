@@ -1,6 +1,6 @@
 "use client";
 
-import { AIProvider, OpenAIModel, GeminiModel, OPENAI_MODELS, GEMINI_MODELS, ModelInfo } from "@/types";
+import { AIProvider, OPENAI_MODELS, GEMINI_MODELS, OPENAI_LIVE_MODELS, GEMINI_LIVE_MODELS, ModelInfo } from "@/types";
 import { ChevronDown, Coins, Zap } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -9,16 +9,17 @@ interface ModelSelectorProps {
     provider: AIProvider;
     selectedModel: string;
     onModelChange: (model: string) => void;
+    isLive?: boolean;
 }
 
-export function ModelSelector({ provider, selectedModel, onModelChange }: ModelSelectorProps) {
+export function ModelSelector({ provider, selectedModel, onModelChange, isLive = false }: ModelSelectorProps) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Get models based on provider
+    // Get models based on provider and whether live models are requested
     const models = provider === "openai"
-        ? Object.values(OPENAI_MODELS)
-        : Object.values(GEMINI_MODELS);
+        ? (isLive ? Object.values(OPENAI_LIVE_MODELS) : Object.values(OPENAI_MODELS))
+        : (isLive ? Object.values(GEMINI_LIVE_MODELS) : Object.values(GEMINI_MODELS));
 
     const currentModel = models.find(m => m.id === selectedModel) || models[0];
 
@@ -86,7 +87,7 @@ export function ModelSelector({ provider, selectedModel, onModelChange }: ModelS
                 )}>
                     <div className="p-2">
                         <div className="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            {isOpenAI ? "OpenAI Modely" : "Gemini Modely"}
+                            {isOpenAI ? (isLive ? "OpenAI Live Modely" : "OpenAI Modely") : (isLive ? "Gemini Live Modely" : "Gemini Modely")}
                         </div>
 
                         {models.map((model) => (

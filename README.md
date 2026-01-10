@@ -18,9 +18,9 @@ An AI-powered voice-to-reservation tool that compares 4 real-time AI voice model
 - **UI/Styling:** Tailwind CSS 4.x, Custom Shadcn-style components
 - **AI Integration:** 
   - **OpenAI Standard:** Whisper API + GPT-4o-mini
-  - **OpenAI Realtime:** WebRTC streaming (`gpt-4o-realtime-preview`)
+  - **OpenAI Realtime:** WebRTC streaming (e.g. `gpt-4o-realtime-preview`, `gpt-4o-mini-realtime-preview`)
   - **Gemini Standard:** Gemini 2.0 Flash (REST)
-  - **Gemini Live:** WebSocket streaming (`gemini-2.0-flash-exp`)
+  - **Gemini Live:** WebSocket streaming (e.g. `gemini-2.0-flash-exp`, `gemini-2.5-flash-native-audio-preview`)
 - **Language:** TypeScript, React 19.2.3
 
 ## 📦 How to Run

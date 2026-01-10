@@ -10,12 +10,14 @@ interface RealtimeRecorderProps {
     onTranscription: (result: TranscriptionResult) => void;
     isProcessing: boolean;
     setIsProcessing: (value: boolean) => void;
+    model?: string;
 }
 
 export function RealtimeRecorder({
     onTranscription,
     isProcessing,
-    setIsProcessing
+    setIsProcessing,
+    model
 }: RealtimeRecorderProps) {
     const [isConnected, setIsConnected] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
@@ -59,9 +61,11 @@ export function RealtimeRecorder({
         setLiveTranscript("");
 
         try {
-            // Get ephemeral token from backend
+            // Get ephemeral token from backend (include selected model)
             const tokenResponse = await fetch("/api/realtime/session", {
                 method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ model: model || 'gpt-4o-realtime-preview' })
             });
 
             if (!tokenResponse.ok) {
@@ -125,7 +129,15 @@ export function RealtimeRecorder({
                             model: "whisper-1",
                             language: "cs"  // Force Czech language
                         },
-                        instructions: "Uživatel mluví česky. Vždy přepisuj v češtině. Extrahuj rezervační data: jméno, datum, čas."
+                        instructions: `Jsi česky mluvící asistent pro rezervace. 
+Tvým úkolem je:
+1. Mluvit pouze česky.
+2. Přesně přepisovat data.
+3. Extrahovat: jméno klienta, datum (YYYY-MM-DD), čas (HH:MM).
+ Důležité:
+- Česká jména skloňuj do 1. pádu (nominativ).
+- Datum formátuj ISO 8601.
+- Uživatel mluví česky.`
                     }
                 }));
             };
@@ -134,9 +146,10 @@ export function RealtimeRecorder({
             const offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
 
-            // Send offer to OpenAI Realtime API
+            // Send offer to OpenAI Realtime API (use selected model if provided)
+            const modelToUse = model || 'gpt-4o-realtime-preview';
             const sdpResponse = await fetch(
-                `https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview`,
+                `https://api.openai.com/v1/realtime?model=${modelToUse}`,
                 {
                     method: "POST",
                     headers: {
