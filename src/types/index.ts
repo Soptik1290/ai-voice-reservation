@@ -21,7 +21,7 @@ export type AIProvider = 'openai' | 'gemini' | 'openai-realtime' | 'gemini-live'
 
 // LLM Model types
 export type OpenAIModel = 'gpt-4o-mini' | 'gpt-5-mini';
-export type GeminiModel = 'gemini-2.0-flash' | 'gemini-2.5-flash';
+export type GeminiModel = 'gemini-2.0-flash' | 'gemini-2.5-flash' | 'gemini-3-flash-preview';
 
 // Live / preview models are separated so they don't appear in the standard selector
 export type OpenAILiveModel = 'gpt-4o-realtime-preview' | 'gpt-4o-mini-realtime-preview';
@@ -61,6 +61,12 @@ export const GEMINI_MODELS: Record<GeminiModel, ModelInfo> = {
         name: 'Gemini 2.5 Flash',
         inputPrice: 0.15,
         outputPrice: 0.60
+    },
+    'gemini-3-flash-preview': {
+        id: 'gemini-3-flash-preview',
+        name: 'Gemini 3 Flash Preview',
+        inputPrice: 0.50,
+        outputPrice: 3.00
     }
 };
 
