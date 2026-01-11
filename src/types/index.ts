@@ -83,8 +83,8 @@ export const GEMINI_LIVE_MODELS: Record<GeminiLiveModel, ModelInfo> = {
     'gemini-2.5-flash-native-audio-preview-12-2025': {
         id: 'gemini-2.5-flash-native-audio-preview-12-2025',
         name: 'Gemini 2.5 Flash Native Audio Preview (Dec 2025)',
-        inputPrice: 0.50,
-        outputPrice: 2.00
+        inputPrice: 3.00,  // Audio input price
+        outputPrice: 12.00  // Audio output price
     }
 };
 
